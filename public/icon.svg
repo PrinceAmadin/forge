@@ -1,0 +1,6 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#0A0A0B"/>
+  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-style="italic"
+        font-size="300" fill="#F59E0B">F</text>
+</svg>

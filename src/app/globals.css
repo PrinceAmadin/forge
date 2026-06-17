@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/*
+  Forge design tokens — §5.1, §5.2.
+  Seven colors. Three faces. Nothing else.
+  Tailwind v4 reads these @theme values to generate utilities
+  (bg-bg, text-primary, border-border, text-accent, font-serif, …).
+*/
+@theme {
+  --color-bg: #0a0a0b;
+  --color-primary: #fafafa;
+  --color-secondary: #a1a1aa;
+  --color-tertiary: #71717a;
+  --color-quaternary: #52525b;
+  --color-quinary: #3f3f46;
+  --color-border: #27272a;
+  --color-border-dim: #18181b;
+  --color-accent: #f59e0b;
+  --color-accent-strong: #d4d4d8;
+  --color-verified: #10b981;
+  --color-rejected: #b91c1c;
+
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-md: 6px;
+
+  /* Transitions are always 150ms ease-out. §5.5 / §19.5 */
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-primary);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  /* Native momentum scrolling. §3 */
+  -webkit-overflow-scrolling: touch;
+  min-height: 100dvh;
+}
+
+/* Tabular figures wherever data lines up in columns. */
+.tnum {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* The accent-tint row wash for the viewer's own leaderboard row. §6.1 */
+.you-tint {
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+/* Pending-day cell in the campaign strip. §6.2 */
+.cell-pending {
+  background: repeating-linear-gradient(
+    45deg,
+    #f59e0b,
+    #f59e0b 2px,
+    transparent 2px,
+    transparent 4px
+  );
+}
+
+/* Respect iOS safe areas. §3 */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}

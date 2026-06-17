@@ -1,0 +1,1963 @@
+Alright, i need you to give me the master build on forge in .md format... Remember just like traqly it can be as detailed as 5K+ words... I don't want you to miss any part of the detailed prompting because that would be the foundation on which claude code would build the app on... Ensure the tech stack are there, the color combination, the various features, the authentication... I need you to ensure ALL IS IN ORDER for the publishing of this app in the prompt - There should be no mistake, no comma and misplace design- I'm a man of perfection and everything must be perfect...  Remember that claude wouldn't have idea on what the current mock up looks like because it don't have access to the image... So i need you to describe the image for it of the entire UI so it get it fully visualized. 
+I need a detailed prompting of the entire Forge app
+
+
+THIS BELOW SHOULD BE OF UTMOST IMPORTANT: 
+Majority of the users would be using their phone. So i need you to priotize a good mobile UI, more better than the desktop. That would be where 95% of our audience would be using the forge app. So make detailed prompting for the mobile
+
+
+CHATGPT VIEW:
+I think your prompt requirement is exactly the right direction, but I would make one adjustment before we generate the master build.
+Right now you're asking for:
+
+"Build Forge."
+
+What Claude Code actually needs is:
+"Become the founding design team, product manager, UX lead, frontend architect, backend architect, and implementation engineer for Forge."
+That's a different level of prompting.
+The mistake most people make with Claude Code is they describe features.
+The best results happen when you describe:
+
+Vision
+Philosophy
+Product psychology
+User behavior
+Design principles
+What to avoid
+What success looks like
+Technical implementation
+Future scalability
+
+before describing features.
+
+For Forge specifically, I'd structure the Master Build Prompt into:
+
+1. Product Vision
+Not:
+Forge is a leaderboard app.
+
+But:
+Forge is a competitive accountability platform.
+The product is not about tracking hours.
+The product is about creating tension, rivalry, progress, public accountability, and the pursuit of excellence.
+Users should feel like they are participating in a season, campaign, or championship.
+The leaderboard is the product.
+
+2. Product Psychology
+This section is critical.
+Claude must understand:
+Users open Forge to answer:
+Am I winning?
+Who passed me?
+How far am I from the prize line?
+Who am I chasing?
+Who is chasing me?
+
+Not:
+How many hours did I log?
+This changes every screen.
+
+
+3. Mobile First Philosophy
+This deserves an entire section.
+Not a paragraph.
+A section.
+Because you correctly identified:
+95% mobile.
+That means:
+Desktop is secondary.
+Mobile is primary.
+Every screen should be designed for:
+390px
+414px
+430px
+before anything else.
+
+
+4. Design System
+This should be exhaustive.
+Colors.
+Typography.
+Spacing.
+Borders.
+States.
+Interaction.
+Everything.
+
+
+5. Visual Identity
+You need to describe the mockup.
+Not:
+Dark leaderboard.
+But:
+The leaderboard occupies nearly the entire viewport.
+Rows are separated by thin zinc borders.
+Rank numerals are rendered in a large elegant serif.
+Top 3 positions receive subtle gold treatment.
+Information density is high.
+The UI feels closer to an F1 standings board than a SaaS dashboard.
+
+
+6. Anti-AI Design Rules
+This section is mandatory.
+Literally:
+FORBIDDEN:
+- rounded-2xl
+- large card grids
+- dashboard cards
+- gradient text
+- colorful icons
+- centered heroes
+- glassmorphism
+- neumorphism
+- emoji decoration
+- excessive shadows
+This single section may improve the output by 40%.
+
+
+7. Authentication
+Need full specification.
+Google Auth.
+Email Auth.
+Magic Links.
+Roles.
+Admin.
+Participant.
+Super Admin.
+Session management.
+Protected routes.
+Everything.
+
+
+8. Database Schema
+Very important.
+Otherwise Claude improvises.
+Need:
+Users.
+Challenges.
+Submissions.
+Leaderboard.
+Verification Queue.
+Admin Notes.
+Audit Logs.
+Everything.
+
+
+9. Mobile Screens
+This is where I would spend pages.
+Literally pages.
+For each screen:
+
+Home
+Leaderboard
+Profile
+Submission
+Challenge Details
+Admin Queue
+Admin Review
+Settings
+Authentication
+
+Describe:
+Layout
+Typography
+Interactions
+Gestures
+Scroll behavior
+Empty states
+
+
+10. Submission Verification
+This is mission critical.
+Need to explain:
+User submits:
+Hours
+Topic
+Screenshot
+
+Admin sees:
+Claimed Hours
+Screenshot
+Verification status
+
+Workflow:
+Pending → Confirmed → Rejected
+
+
+11. Leaderboard Engine
+Need exact ranking logic.
+Tie breakers.
+Prize line.
+Sorting.
+Position changes.
+Everything.
+
+
+12. Future Scalability
+Even if you aren't building it now.
+Claude should architect for:
+Forge
+ ├── Exam Flame
+ ├── ReadHabit
+ ├── CodeHabit
+ ├── Clash of Halls
+ └── Future Challenges
+
+
+13. Tech Stack
+
+Need precision on this end... Remember we must priotize a fast system for:
+Frontend:
+Backend:
+Storage:
+Authentication:
+Deployment:
+Analytics:
+Image Processing:
+
+
+14. Production Readiness
+Very important.
+Most prompts miss this.
+
+Need:
+Loading states
+Error states
+Empty states
+Skeletons
+Accessibility
+SEO
+PWA support
+Offline handling
+
+
+15. Final Command
+The last section should tell Claude:
+Do not optimize for speed of implementation.
+Optimize for product quality.
+If a decision must be made between:
+1. Easier implementation
+2. Better user experience
+
+Choose better user experience.
+The final result should feel handcrafted.
+Not generated.
+Not templated.
+Not derived from a typical SaaS starter kit.
+
+Forge should NOT be built around "reading." or "tracking"
+Forge should be built around "competitions."
+This is critical.
+
+
+
+CHATGPT CHALLENG ACHITECTURE:
+## Challenge Architecture
+
+Forge is not a reading tracker.
+
+Forge is not a habit tracker.
+
+Forge is a competitive accountability platform built around challenges.
+
+The architecture must be challenge-first, not activity-first.
+
+Every feature, screen, database model, and user flow should assume that Forge may host many different challenges in the future.
+
+Examples include:
+
+* Exam Flame
+* ReadHabit Challenge
+* CodeHabit Challenge
+* Clash of Halls
+* Future competitions that do not yet exist
+
+Because of this, Forge must never be hardcoded around reading, books, study sessions, or exam preparation.
+
+Instead, Forge revolves around a central Challenge entity.
+
+A challenge contains:
+
+* Name
+* Description
+* Start Date
+* End Date
+* Duration
+* Prize Structure
+* Rules
+* Status
+* Participants
+* Leaderboards
+* Submissions
+
+Examples:
+
+Exam Flame is a challenge.
+
+ReadHabit is a challenge.
+
+CodeHabit is a challenge.
+
+Users do not belong to a challenge permanently.
+
+Users join challenges.
+
+A single user account should be capable of participating in multiple challenges over time.
+
+Example:
+
+Prince
+├── Exam Flame
+├── ReadHabit
+└── CodeHabit
+
+This architecture ensures Forge scales beyond a single event.
+
+---
+
+### Challenge Lifecycle
+
+Every challenge must move through defined states.
+
+Draft
+
+Challenge is being prepared and is not visible publicly.
+
+Active
+
+Challenge is currently running and accepting submissions.
+
+Verification
+
+Challenge has ended but administrators are reviewing submissions and resolving disputes.
+
+Completed
+
+Results are finalized and rankings are locked.
+
+Archived
+
+Challenge is preserved historically and can no longer be modified.
+
+---
+
+### Submission Architecture
+
+Forge must never store leaderboard totals directly.
+
+The source of truth is daily submissions.
+
+Each participant submits activity for a specific challenge day.
+
+Example:
+
+Day 1 → 8 Hours
+
+Day 2 → 10.5 Hours
+
+Day 3 → 7 Hours
+
+Total hours should always be calculated from submissions.
+
+Leaderboards must be generated dynamically from verified submissions.
+
+This guarantees data integrity and prevents ranking inconsistencies.
+
+---
+
+### Submission Workflow
+
+Each submission contains:
+
+* Hours Completed
+* Study Topic
+* Screenshot Evidence
+* Timestamp
+* Verification Status
+
+Optional:
+
+* Notes
+
+Submission states:
+
+Pending
+
+Awaiting review.
+
+Confirmed
+
+Verified and counted toward rankings.
+
+Rejected
+
+Disqualified and excluded from calculations.
+
+No submission should ever be permanently deleted.
+
+All submission history must remain available for auditing.
+
+---
+
+### Leaderboard Architecture
+
+Leaderboards are the core of Forge.
+
+The leaderboard is not a secondary feature.
+
+The leaderboard is the product.
+
+Users primarily open Forge to answer:
+
+* Am I winning?
+* Who passed me?
+* How far am I from the prize line?
+* Who am I need to overtake?
+* Who is chasing me?
+
+Because of this, the leaderboard must update automatically as verified submissions change.
+
+For Exam Flame, ranking is determined by:
+
+1. Total Verified Hours
+2. Number of Verified Days
+3. Earliest Submission Timestamp
+
+The challenge organizer may customize ranking logic in future challenges.
+
+---
+
+### Prize Line System
+
+Forge must support configurable prize positions.
+
+Example:
+
+Top 15
+
+Top 10
+
+Top 5
+
+The system should automatically calculate the prize threshold based on challenge settings.
+
+A visible "Prize Line" must appear within the leaderboard.
+
+Participants below the line should see exactly how many hours separate them from qualification.
+
+Example:
+
+7.5 Hours to Cross
+
+This is a critical motivational feature.
+
+---
+
+### Rivalry System
+
+Forge should create tension.
+
+Every participant dashboard should display:
+
+Current Rank
+
+Person Directly Above You
+
+Hours Needed to Overtake
+
+Person Directly Below You
+
+Hours Lead Before Being Overtaken
+
+Example:
+
+Chasing:
+Samuel Idi
++2.5 Hours Ahead
+
+Being Chased By:
+David Olubi
+-1.0 Hour Behind
+
+The rivalry system should make rankings feel alive and dynamic.
+
+---
+
+### Challenge Progress System
+
+Each challenge day should be visually represented.
+
+For a 20-day challenge:
+
+20 progress cells should be displayed.
+
+Verified Day:
+Filled
+
+Pending Day:
+Patterned
+
+Skipped Day:
+Empty
+
+The progress strip acts as a visual campaign tracker.
+
+Participants should immediately understand how far they have progressed through the challenge.
+
+---
+
+### Hall Architecture
+
+Forge should be architected to support halls as first-class entities.
+
+Users may optionally belong to halls.
+
+Examples:
+
+Nelson Hall
+
+Akpovi Hall
+
+Hall 2
+
+A challenge may enable:
+
+Individual Competition
+
+Hall Competition
+
+Or Both
+
+When enabled, halls should accumulate total verified hours from all members.
+
+This allows future hall-versus-hall challenges without requiring architectural changes.
+
+---
+
+### Admin Architecture
+
+Administrators do not need traditional dashboards.
+
+Forge should prioritize moderation queues.
+
+The admin workflow should be:
+
+Review Submission
+
+Approve or Reject
+
+Move Immediately To Next Submission
+
+The verification process must be optimized for speed and scale.
+
+The system should comfortably support hundreds of submissions without administrative fatigue.
+
+Keyboard shortcuts and rapid review workflows are encouraged.
+
+---
+
+### Long-Term Scalability
+
+Forge must be designed as a challenge platform.
+
+Not as a one-off Exam Flame application.
+
+All systems should assume:
+
+Multiple Challenges
+
+Multiple Seasons
+
+Multiple Leaderboards
+
+Multiple Hall Competitions
+
+Thousands of Future Submissions
+
+The architecture chosen today should remain valid even if Forge grows 100x larger than its initial launch.
+
+
+
+
+
+
+CHATGPT ADMIN AND SUPER ADMIN ACHITECTURE:
+# Administration & Governance Architecture
+
+Forge is a competitive accountability platform where rankings determine status, prizes, and public recognition.
+
+Because of this, trust is a foundational requirement.
+
+The platform must be architected so that rankings are generated by the system, not manipulated by administrators.
+
+Forge uses a three-role governance model:
+
+- Participant
+- Admin
+- SuperAdmin
+
+No additional roles should exist in Version 1.
+
+The permission system should remain simple, understandable, and transparent.
+
+---
+
+## Governance Philosophy
+
+Forge operates under a strict separation of responsibilities.
+
+Participants compete.
+
+Admins verify.
+
+SuperAdmins govern.
+
+This separation is critical.
+
+Administrators should never have direct control over rankings, total hours, or leaderboard positions.
+
+Rankings must always be generated automatically from verified submissions.
+
+The platform must be designed so that trust comes from process rather than authority.
+
+---
+
+# Participant Role
+
+Participants are competitors.
+
+Their primary objective is to join challenges, submit progress, and climb leaderboards.
+
+Participants can:
+
+- Register an account
+- Join active challenges
+- Submit challenge entries
+- Upload evidence
+- View leaderboards
+- View rankings
+- View personal progress
+- Edit their profile
+- View their own submission history
+
+Participants cannot:
+
+- Review submissions
+- Access moderation tools
+- Modify challenge settings
+- Access administrative areas
+- View internal notes
+- Change rankings
+
+Participants should never see administrative interfaces.
+
+The participant experience should remain focused entirely on competition and progress.
+
+---
+
+# Admin Role
+
+Admins are operators.
+
+They are not platform owners.
+
+Their responsibility is to verify submissions, investigate suspicious activity, and maintain challenge integrity.
+
+Admins function as referees.
+
+They do not control challenges.
+
+They do not control rankings.
+
+They do not control platform configuration.
+
+They simply ensure submitted data is legitimate.
+
+---
+
+## Admin Responsibilities
+
+The primary responsibility of an Admin is submission verification.
+
+Admins review participant submissions and determine whether they should contribute toward challenge rankings.
+
+Each submission enters a moderation queue.
+
+Submission states include:
+
+- Pending
+- Confirmed
+- Rejected
+
+Admins can:
+
+- View pending submissions
+- Inspect uploaded screenshots
+- Review claimed hours
+- Review topics studied
+- Confirm submissions
+- Reject submissions
+- Add moderation notes
+- Flag suspicious activity
+- Suspend participants when necessary
+
+Admins should not be capable of editing challenge settings or leaderboard calculations.
+
+---
+
+## Submission Review Workflow
+
+The review process must be optimized for speed.
+
+Admins should not navigate through complex dashboards.
+
+Instead, Forge should provide a dedicated moderation queue.
+
+When an Admin logs in, the first thing they should see is the review queue.
+
+Example:
+
+37 Pending Reviews
+
+Selecting a submission should immediately display:
+
+- Participant Name
+- Claimed Hours
+- Study Topic
+- Screenshot Evidence
+- Submission Timestamp
+- Verification History
+
+Available actions:
+
+- Confirm
+- Reject
+- Skip
+
+After a decision is made, the next submission should load automatically.
+
+The verification experience should feel more like processing email than navigating dashboards.
+
+Efficiency is the priority.
+
+---
+
+## Moderation Notes
+
+Admins should be able to leave internal moderation notes.
+
+Examples:
+
+- Verified manually
+- Duplicate screenshot detected
+- User provided additional proof
+- Suspicious timestamp
+- Pending investigation
+
+These notes must never be visible to participants.
+
+They exist purely for administrative coordination.
+
+---
+
+## Participant Flags
+
+Forge should support participant flagging.
+
+Flags do not prevent participation.
+
+Flags simply indicate that additional scrutiny may be required.
+
+Examples:
+
+- Repeated suspicious submissions
+- Multiple rejected entries
+- Reported by another participant
+
+Flagged participants should be visually identified within the moderation interface.
+
+---
+
+## Participant Suspension
+
+Admins may temporarily suspend a participant.
+
+Suspended participants:
+
+- Cannot submit entries
+- Cannot join new challenges
+- Remain visible on leaderboards
+- Retain historical records
+
+Suspensions should require a reason.
+
+Every suspension must be logged.
+
+---
+
+# SuperAdmin Role
+
+SuperAdmins govern the platform.
+
+This role should be extremely limited.
+
+In most deployments there should only be one or two SuperAdmins.
+
+SuperAdmins possess all Admin permissions plus platform-level authority.
+
+They are responsible for challenge creation, configuration, platform management, and governance.
+
+---
+
+## Challenge Creation
+
+SuperAdmins can create challenges.
+
+A challenge contains:
+
+- Name
+- Description
+- Rules
+- Duration
+- Prize Structure
+- Start Date
+- End Date
+- Status
+
+Examples:
+
+- Exam Flame
+- ReadHabit
+- CodeHabit
+- Clash of Halls
+
+The platform should never be hardcoded around a specific challenge.
+
+---
+
+## Challenge Lifecycle Management
+
+SuperAdmins control challenge states.
+
+Supported states include:
+
+Draft
+
+The challenge is being prepared.
+
+Active
+
+The challenge is live and accepting submissions.
+
+Verification
+
+Submissions are under review and final rankings are not yet locked.
+
+Completed
+
+Results are finalized.
+
+Archived
+
+Challenge history is preserved.
+
+Only SuperAdmins can transition challenges between these states.
+
+---
+
+## User Management
+
+SuperAdmins can:
+
+- Promote Participants to Admins
+- Demote Admins to Participants
+- Ban Accounts
+- Restore Accounts
+- Reset Permissions
+
+Role changes must always be logged.
+
+---
+
+## Challenge Configuration
+
+SuperAdmins can modify:
+
+- Prize structures
+- Leaderboard rules
+- Submission requirements
+- Challenge duration
+- Hall participation settings
+- Verification requirements
+
+Admins cannot access these controls.
+
+---
+
+# Leaderboard Integrity Rules
+
+The leaderboard is the most important asset within Forge.
+
+Because of this, strict integrity rules must exist.
+
+Neither Admins nor SuperAdmins should ever directly edit:
+
+- Leaderboard positions
+- Total verified hours
+- Ranking order
+- Participant scores
+
+These values must always be calculated automatically by the system.
+
+Administrative users influence rankings only through submission verification.
+
+No manual ranking controls should exist anywhere within the platform.
+
+---
+
+# Audit Log System
+
+Forge must maintain a complete audit trail.
+
+Every administrative action should generate an immutable audit record.
+
+Examples:
+
+Admin Sarah approved submission.
+
+Admin David suspended participant.
+
+SuperAdmin Prince modified challenge rules.
+
+SuperAdmin Prince promoted user to Admin.
+
+Audit logs should contain:
+
+- User performing action
+- Timestamp
+- Action type
+- Affected entity
+- Previous state
+- New state
+
+Nothing should happen silently.
+
+The platform should be fully traceable.
+
+---
+
+# Appeals System
+
+Participants should be allowed to appeal rejected submissions.
+
+An appeal contains:
+
+- Submission Reference
+- Participant Explanation
+- Optional Additional Evidence
+
+Appeals enter a dedicated review queue.
+
+Administrators can:
+
+- Uphold Rejection
+- Restore Submission
+
+Appeal outcomes should also be logged.
+
+This creates transparency and reduces disputes.
+
+---
+
+# Fraud Detection Layer
+
+Forge should automatically identify suspicious activity.
+
+Examples include:
+
+- Duplicate screenshots
+- Excessive claimed hours
+- Identical submissions across multiple days
+- Unusual activity spikes
+- Repeated rejected entries
+
+The system should never automatically reject content.
+
+Instead, suspicious submissions should be flagged for human review.
+
+The administrator remains the final decision maker.
+
+---
+
+# Administrative Interface Philosophy
+
+The administrative interface is not a dashboard.
+
+It is an operations center.
+
+Every design decision should prioritize:
+
+- Speed
+- Accuracy
+- Visibility
+- Efficiency
+
+Administrators should spend as little time as possible navigating.
+
+The system should bring work directly to them.
+
+The goal is to make reviewing hundreds of submissions feel effortless.
+
+---
+
+# Governance Summary
+
+Forge follows a strict separation of responsibilities:
+
+Participants compete.
+
+Admins verify.
+
+SuperAdmins govern.
+
+The system calculates rankings.
+
+No human manually controls leaderboard positions.
+
+Trust is achieved through transparency, auditability, and process integrity.
+
+This governance structure should remain valid whether Forge supports 100 participants or 100,000 participants.
+
+
+
+
+CHATGPT Authentication & Identity Architecture:
+# Authentication & Identity Architecture
+
+Forge is a competitive accountability platform.
+
+Authentication exists to establish identity, accountability, and trust while introducing as little friction as possible.
+
+The majority of Forge users will arrive from mobile devices through shared links distributed in WhatsApp groups.
+
+Because of this, authentication should prioritize speed, simplicity, and accessibility over enterprise-level complexity.
+
+The objective is simple:
+
+A new participant should be able to discover Forge, create an account, join a challenge, and submit their first entry within approximately sixty seconds.
+
+Authentication should feel invisible.
+
+The user should think about competition, not account creation.
+
+---
+
+# Authentication Philosophy
+
+Forge is not a banking application.
+
+Forge is not an enterprise platform.
+
+Forge does not require heavy onboarding.
+
+The authentication experience should optimize for:
+
+- Low friction
+- Fast registration
+- Mobile usability
+- Persistent sessions
+- Accountability
+- Future scalability
+
+The authentication system should avoid:
+
+- Complex onboarding flows
+- Mandatory password creation
+- Password reset systems
+- Multi-step verification processes
+- Excessive form fields
+- Administrative approval requirements
+
+Every unnecessary screen increases abandonment.
+
+The platform should remove as much friction as possible while maintaining trust and accountability.
+
+---
+
+# Supported Authentication Methods
+
+Version 1 should support only two authentication providers.
+
+Primary Provider:
+
+Google Authentication
+
+Secondary Provider:
+
+Email One-Time Password (OTP)
+
+No additional authentication providers should be implemented in Version 1.
+
+Future providers may include:
+
+- Apple
+- Microsoft
+- GitHub
+
+However these should remain future considerations only.
+
+---
+
+# Google Authentication
+
+Google should be the primary authentication method.
+
+The majority of users already possess Google accounts.
+
+Google sign-in provides the fastest onboarding experience.
+
+The primary call-to-action on authentication screens should be:
+
+Continue with Google
+
+Google authentication should require a single tap whenever possible.
+
+No additional registration flow should occur before account creation.
+
+---
+
+# Email OTP Authentication
+
+Users who prefer not to use Google should be able to authenticate using email-based one-time passwords.
+
+Workflow:
+
+Enter Email
+
+Receive Verification Code
+
+Enter Verification Code
+
+Account Created
+
+No password should ever be required.
+
+No password creation screen should exist.
+
+No password recovery flow should exist.
+
+The objective is to eliminate unnecessary complexity.
+
+---
+
+# Authentication Provider Architecture
+
+Authentication should be powered by Supabase Auth.
+
+Supabase should manage:
+
+- User identity
+- OAuth providers
+- OTP delivery
+- Session management
+- Access tokens
+- Refresh tokens
+
+Forge should not implement custom authentication infrastructure.
+
+Authentication should remain delegated to Supabase.
+
+---
+
+# Identity Creation Workflow
+
+Authentication and profile creation are separate concepts.
+
+Logging in creates an account.
+
+Joining a challenge requires a complete profile.
+
+After successful authentication, the user should be redirected to profile completion.
+
+Required profile fields:
+
+- Full Name
+- Hall
+- Course
+- Academic Level
+
+Optional fields:
+
+- Profile Photo
+- Phone Number
+
+Users should not be allowed to join challenges until required profile information has been completed.
+
+This ensures leaderboard entries remain meaningful and identifiable.
+
+---
+
+# User Identity Model
+
+Each user should contain:
+
+- Unique ID
+- Full Name
+- Email Address
+- Profile Image
+- Hall
+- Course
+- Academic Level
+- Role
+- Handle
+- Created Date
+- Last Login Date
+
+The authentication provider should remain the source of truth for identity.
+
+Forge-specific information should exist separately from authentication records.
+
+---
+
+# Forge Handle System
+
+Each participant should possess a unique Forge handle.
+
+Examples:
+
+@prince
+
+@goodness
+
+@samuel
+
+The handle should be unique across the platform.
+
+Handles enable:
+
+- Public profiles
+- Future mentions
+- Rival systems
+- Community interactions
+
+Leaderboards may display full names while handles remain available internally.
+
+---
+
+# Session Management
+
+Forge is a mobile-first application.
+
+Users should not be forced to repeatedly log in.
+
+Sessions should remain persistent.
+
+Recommended session behavior:
+
+- 30-Day Session Duration
+- Automatic Token Refresh
+- Seamless Reauthentication
+
+Participants should remain logged in throughout an entire challenge whenever possible.
+
+The average user should not encounter a login screen twice during a single challenge.
+
+---
+
+# Mobile Authentication Experience
+
+Authentication must be designed for mobile devices first.
+
+Desktop experiences should adapt from the mobile design.
+
+The authentication screen should remain extremely minimal.
+
+Screen Structure:
+
+Forge Wordmark
+
+Short Value Statement
+
+Primary Authentication Button
+
+Divider
+
+Secondary Authentication Button
+
+Nothing else.
+
+Avoid:
+
+- Marketing sections
+- Testimonials
+- Feature grids
+- Statistics
+- Promotional content
+- Complex navigation
+
+The objective is account creation, not education.
+
+---
+
+# Challenge Join Architecture
+
+Authentication does not automatically join a challenge.
+
+A participant must explicitly join a challenge.
+
+Workflow:
+
+Authentication
+
+Profile Completion
+
+Challenge Page
+
+Rule Acceptance
+
+Challenge Enrollment
+
+This separation allows one account to participate in multiple challenges.
+
+---
+
+# Rule Acceptance
+
+Before joining a challenge, participants should acknowledge challenge rules.
+
+Example:
+
+I understand that submissions require evidence.
+
+I understand that fraudulent submissions may result in disqualification.
+
+I understand that rankings are determined by verified submissions.
+
+Participants must actively confirm these acknowledgements before joining.
+
+This creates accountability and reduces disputes.
+
+---
+
+# Invitation Link Architecture
+
+Every challenge should possess a public invitation link.
+
+Example:
+
+forge.app/exam-flame
+
+Users accessing challenge links should experience intelligent routing.
+
+Authenticated Users:
+
+Directly enter the challenge page.
+
+Unauthenticated Users:
+
+Authentication Flow
+
+Automatic Return To Challenge
+
+The platform should always return users to their intended destination after login.
+
+This behavior is critical for conversion and user retention.
+
+---
+
+# Role Assignment
+
+Every newly created account should receive:
+
+Participant
+
+by default.
+
+No exceptions.
+
+Role elevation should only occur through administrative action.
+
+Supported roles:
+
+Participant
+
+Admin
+
+SuperAdmin
+
+Users must never self-assign elevated permissions.
+
+---
+
+# Role-Based Access Control
+
+Access should be determined server-side.
+
+Client-side role validation alone is insufficient.
+
+Protected routes should verify permissions before rendering content.
+
+Participants:
+
+Competition interfaces only.
+
+Admins:
+
+Verification and moderation interfaces.
+
+SuperAdmins:
+
+Governance and platform management interfaces.
+
+Authentication should not determine experience.
+
+Role assignment should determine experience.
+
+---
+
+# Account Recovery
+
+Because Forge uses Google Authentication and Email OTP Authentication, traditional password recovery should not exist.
+
+Google users recover accounts through Google.
+
+Email OTP users recover access through email verification.
+
+This removes the need for:
+
+- Password reset screens
+- Password recovery flows
+- Security questions
+- Support requests
+
+The authentication system should remain maintenance-free.
+
+---
+
+# Security Requirements
+
+Minimum security requirements include:
+
+- Secure session storage
+- Refresh token rotation
+- Protected API routes
+- Server-side permission validation
+- Row-Level Security
+- Secure cookie handling
+- Audit logging for sensitive actions
+
+Client-side permissions should never be trusted.
+
+The server remains the ultimate authority for access control.
+
+---
+
+# Authentication Analytics
+
+Forge should collect authentication analytics.
+
+Examples:
+
+- New Registrations
+- Authentication Method Usage
+- Challenge Join Conversion Rate
+- Registration Completion Rate
+- Abandoned Profile Completion
+
+These metrics should be available to SuperAdmins.
+
+The objective is continuous optimization of onboarding.
+
+---
+
+# Authentication Design Principles
+
+Authentication should feel effortless.
+
+Users should never feel like they are creating an account.
+
+Users should feel like they are entering a competition.
+
+The entire experience should communicate:
+
+Quick Entry
+
+Low Friction
+
+Strong Identity
+
+High Accountability
+
+Every design decision should support these goals.
+
+Success is achieved when a participant can move from a WhatsApp link to active challenge participation in under one minute.
+
+
+
+
+CHATGPT Mobile navigation model architecture:
+# Authentication & Identity Architecture
+
+Forge is a competitive accountability platform.
+
+Authentication exists to establish identity, accountability, and trust while introducing as little friction as possible.
+
+The majority of Forge users will arrive from mobile devices through shared links distributed in WhatsApp groups.
+
+Because of this, authentication should prioritize speed, simplicity, and accessibility over enterprise-level complexity.
+
+The objective is simple:
+
+A new participant should be able to discover Forge, create an account, join a challenge, and submit their first entry within approximately sixty seconds.
+
+Authentication should feel invisible.
+
+The user should think about competition, not account creation.
+
+---
+
+# Authentication Philosophy
+
+Forge is not a banking application.
+
+Forge is not an enterprise platform.
+
+Forge does not require heavy onboarding.
+
+The authentication experience should optimize for:
+
+- Low friction
+- Fast registration
+- Mobile usability
+- Persistent sessions
+- Accountability
+- Future scalability
+
+The authentication system should avoid:
+
+- Complex onboarding flows
+- Mandatory password creation
+- Password reset systems
+- Multi-step verification processes
+- Excessive form fields
+- Administrative approval requirements
+
+Every unnecessary screen increases abandonment.
+
+The platform should remove as much friction as possible while maintaining trust and accountability.
+
+---
+
+# Supported Authentication Methods
+
+Version 1 should support only two authentication providers.
+
+Primary Provider:
+
+Google Authentication
+
+Secondary Provider:
+
+Email One-Time Password (OTP)
+
+No additional authentication providers should be implemented in Version 1.
+
+Future providers may include:
+
+- Apple
+- Microsoft
+- GitHub
+
+However these should remain future considerations only.
+
+---
+
+# Google Authentication
+
+Google should be the primary authentication method.
+
+The majority of users already possess Google accounts.
+
+Google sign-in provides the fastest onboarding experience.
+
+The primary call-to-action on authentication screens should be:
+
+Continue with Google
+
+Google authentication should require a single tap whenever possible.
+
+No additional registration flow should occur before account creation.
+
+---
+
+# Email OTP Authentication
+
+Users who prefer not to use Google should be able to authenticate using email-based one-time passwords.
+
+Workflow:
+
+Enter Email
+
+Receive Verification Code
+
+Enter Verification Code
+
+Account Created
+
+No password should ever be required.
+
+No password creation screen should exist.
+
+No password recovery flow should exist.
+
+The objective is to eliminate unnecessary complexity.
+
+---
+
+# Authentication Provider Architecture
+
+Authentication should be powered by Supabase Auth.
+
+Supabase should manage:
+
+- User identity
+- OAuth providers
+- OTP delivery
+- Session management
+- Access tokens
+- Refresh tokens
+
+Forge should not implement custom authentication infrastructure.
+
+Authentication should remain delegated to Supabase.
+
+---
+
+# Identity Creation Workflow
+
+Authentication and profile creation are separate concepts.
+
+Logging in creates an account.
+
+Joining a challenge requires a complete profile.
+
+After successful authentication, the user should be redirected to profile completion.
+
+Required profile fields:
+
+- Full Name
+- Hall
+- Course
+- Academic Level
+
+Optional fields:
+
+- Profile Photo
+- Phone Number
+
+Users should not be allowed to join challenges until required profile information has been completed.
+
+This ensures leaderboard entries remain meaningful and identifiable.
+
+---
+
+# User Identity Model
+
+Each user should contain:
+
+- Unique ID
+- Full Name
+- Email Address
+- Profile Image
+- Hall
+- Course
+- Academic Level
+- Role
+- Handle
+- Created Date
+- Last Login Date
+
+The authentication provider should remain the source of truth for identity.
+
+Forge-specific information should exist separately from authentication records.
+
+---
+
+# Forge Handle System
+
+Each participant should possess a unique Forge handle.
+
+Examples:
+
+@prince
+
+@goodness
+
+@samuel
+
+The handle should be unique across the platform.
+
+Handles enable:
+
+- Public profiles
+- Future mentions
+- Rival systems
+- Community interactions
+
+Leaderboards may display full names while handles remain available internally.
+
+---
+
+# Session Management
+
+Forge is a mobile-first application.
+
+Users should not be forced to repeatedly log in.
+
+Sessions should remain persistent.
+
+Recommended session behavior:
+
+- 30-Day Session Duration
+- Automatic Token Refresh
+- Seamless Reauthentication
+
+Participants should remain logged in throughout an entire challenge whenever possible.
+
+The average user should not encounter a login screen twice during a single challenge.
+
+---
+
+# Mobile Authentication Experience
+
+Authentication must be designed for mobile devices first.
+
+Desktop experiences should adapt from the mobile design.
+
+The authentication screen should remain extremely minimal.
+
+Screen Structure:
+
+Forge Wordmark
+
+Short Value Statement
+
+Primary Authentication Button
+
+Divider
+
+Secondary Authentication Button
+
+Nothing else.
+
+Avoid:
+
+- Marketing sections
+- Testimonials
+- Feature grids
+- Statistics
+- Promotional content
+- Complex navigation
+
+The objective is account creation, not education.
+
+---
+
+# Challenge Join Architecture
+
+Authentication does not automatically join a challenge.
+
+A participant must explicitly join a challenge.
+
+Workflow:
+
+Authentication
+
+Profile Completion
+
+Challenge Page
+
+Rule Acceptance
+
+Challenge Enrollment
+
+This separation allows one account to participate in multiple challenges.
+
+---
+
+# Rule Acceptance
+
+Before joining a challenge, participants should acknowledge challenge rules.
+
+Example:
+
+I understand that submissions require evidence.
+
+I understand that fraudulent submissions may result in disqualification.
+
+I understand that rankings are determined by verified submissions.
+
+Participants must actively confirm these acknowledgements before joining.
+
+This creates accountability and reduces disputes.
+
+---
+
+# Invitation Link Architecture
+
+Every challenge should possess a public invitation link.
+
+Example:
+
+forge.app/exam-flame
+
+Users accessing challenge links should experience intelligent routing.
+
+Authenticated Users:
+
+Directly enter the challenge page.
+
+Unauthenticated Users:
+
+Authentication Flow
+
+Automatic Return To Challenge
+
+The platform should always return users to their intended destination after login.
+
+This behavior is critical for conversion and user retention.
+
+---
+
+# Role Assignment
+
+Every newly created account should receive:
+
+Participant
+
+by default.
+
+No exceptions.
+
+Role elevation should only occur through administrative action.
+
+Supported roles:
+
+Participant
+
+Admin
+
+SuperAdmin
+
+Users must never self-assign elevated permissions.
+
+---
+
+# Role-Based Access Control
+
+Access should be determined server-side.
+
+Client-side role validation alone is insufficient.
+
+Protected routes should verify permissions before rendering content.
+
+Participants:
+
+Competition interfaces only.
+
+Admins:
+
+Verification and moderation interfaces.
+
+SuperAdmins:
+
+Governance and platform management interfaces.
+
+Authentication should not determine experience.
+
+Role assignment should determine experience.
+
+---
+
+# Account Recovery
+
+Because Forge uses Google Authentication and Email OTP Authentication, traditional password recovery should not exist.
+
+Google users recover accounts through Google.
+
+Email OTP users recover access through email verification.
+
+This removes the need for:
+
+- Password reset screens
+- Password recovery flows
+- Security questions
+- Support requests
+
+The authentication system should remain maintenance-free.
+
+---
+
+# Security Requirements
+
+Minimum security requirements include:
+
+- Secure session storage
+- Refresh token rotation
+- Protected API routes
+- Server-side permission validation
+- Row-Level Security
+- Secure cookie handling
+- Audit logging for sensitive actions
+
+Client-side permissions should never be trusted.
+
+The server remains the ultimate authority for access control.
+
+---
+
+# Authentication Analytics
+
+Forge should collect authentication analytics.
+
+Examples:
+
+- New Registrations
+- Authentication Method Usage
+- Challenge Join Conversion Rate
+- Registration Completion Rate
+- Abandoned Profile Completion
+
+These metrics should be available to SuperAdmins.
+
+The objective is continuous optimization of onboarding.
+
+---
+
+# Authentication Design Principles
+
+Authentication should feel effortless.
+
+Users should never feel like they are creating an account.
+
+Users should feel like they are entering a competition.
+
+The entire experience should communicate:
+
+Quick Entry
+
+Low Friction
+
+Strong Identity
+
+High Accountability
+
+Every design decision should support these goals.
+
+Success is achieved when a participant can move from a WhatsApp link to active challenge participation in under one minute.
+
+
+
+
+OVERALL AUTHORITY:
+Claude remember you are the lead Engineer on this, not CHATGPT, so we are to take all chatgpt input with a grain of salt and analyze them before accepting and prompting... Now i want you to come up with The Forge Masterbuild .md prompt, remember, i don't mind how long it is, i just need this to be the ultimate prompt
