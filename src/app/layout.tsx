@@ -29,6 +29,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   applicationName: "Forge",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Forge" },
+  // No `icons` here on purpose: defining it suppresses Next's file-convention
+  // auto-detection. app/icon.svg → favicon, app/apple-icon.png → apple touch icon.
 };
 
 export const viewport: Viewport = {
