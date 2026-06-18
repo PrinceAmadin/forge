@@ -17,7 +17,7 @@ export function PageHeader({
   fallback = "/leaderboard",
   actions,
 }: {
-  title: string;
+  title: React.ReactNode;
   backHref?: string;
   fallback?: string;
   actions?: React.ReactNode;

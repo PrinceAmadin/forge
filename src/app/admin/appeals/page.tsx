@@ -35,7 +35,17 @@ export default async function AdminAppealsPage() {
 
   return (
     <>
-      <PageHeader title="Review appeals" backHref="/settings" />
+      <PageHeader
+        title={
+          <>
+            Review appeals
+            {appeals.length > 0 && (
+              <span className="ml-2 font-mono text-[14px] font-normal text-secondary">· {appeals.length}</span>
+            )}
+          </>
+        }
+        backHref="/settings"
+      />
       <Page className="pt-8">
       <div className="max-w-[640px]">
         {appeals.length === 0 ? (

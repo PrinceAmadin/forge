@@ -4,6 +4,7 @@ import { getUser, getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
 import { PageHeader } from "@/components/nav/page-header";
+import { getAdminPendingCounts } from "@/lib/admin/pending-counts";
 import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function SettingsPage() {
 
   const isAdmin = profile.role === "admin" || profile.role === "super_admin";
   const isSuper = profile.role === "super_admin";
+  const pending = isAdmin ? await getAdminPendingCounts() : null;
 
   return (
     <>
@@ -42,9 +44,15 @@ export default async function SettingsPage() {
             <div className="mt-3 border-b border-[#27272a]">
               <Link href="/admin/queue" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
                 Review queue
+                {pending && pending.pendingSubmissions > 0 && (
+                  <span className="font-mono text-[13px] text-secondary"> · {pending.pendingSubmissions}</span>
+                )}
               </Link>
               <Link href="/admin/appeals" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
                 Review appeals
+                {pending && pending.pendingAppeals > 0 && (
+                  <span className="font-mono text-[13px] text-secondary"> · {pending.pendingAppeals}</span>
+                )}
               </Link>
               {isSuper && (
                 <Link href="/admin/challenges" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>

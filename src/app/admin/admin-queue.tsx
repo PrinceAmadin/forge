@@ -132,7 +132,17 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
 
   return (
     <>
-    <PageHeader title="Review queue" backHref="/settings" />
+    <PageHeader
+      title={
+        <>
+          Review queue
+          {items.length > 0 && (
+            <span className="ml-2 font-mono text-[14px] font-normal text-secondary">· {items.length}</span>
+          )}
+        </>
+      }
+      backHref="/settings"
+    />
     <div className="sm:flex">
       {/* Left list */}
       <aside className="border-b border-[#27272a] sm:h-[calc(100dvh-57px)] sm:w-[320px] sm:shrink-0 sm:overflow-y-auto sm:border-b-0 sm:border-r">
