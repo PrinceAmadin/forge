@@ -12,7 +12,12 @@ export const dynamic = "force-dynamic";
 const rowClass =
   "block w-full border-t border-[#27272a] py-4 text-left text-[14px] transition-colors";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ updated?: string }>;
+}) {
+  const { updated } = await searchParams;
   const user = await getUser();
   if (!user) redirect("/auth");
   const profile = await getProfile();
@@ -32,10 +37,20 @@ export default async function SettingsPage() {
       <PageHeader title="Settings" backHref="/leaderboard" />
       <Page className="pt-8">
       <div className="max-w-[480px]">
+        {updated && (
+          <p className="mb-6 rounded-md border border-accent/40 bg-accent/5 px-4 py-3 text-[13px] text-accent">
+            Profile updated.
+          </p>
+        )}
         <h1 className="text-[22px] font-medium text-primary">{profile.full_name}</h1>
         <p className="mt-1 text-[13px] text-secondary">
           {[hall?.name, profile.course].filter(Boolean).join(" · ")}
         </p>
+
+        {/* Self-service profile editing. §profile-edit */}
+        <Link href="/settings/profile" className="mt-4 inline-block text-[14px] text-accent">
+          Edit profile →
+        </Link>
 
         {/* Operations — server-gated; never rendered for participants. §13 */}
         {isAdmin && (
