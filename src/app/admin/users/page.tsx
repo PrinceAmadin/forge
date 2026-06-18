@@ -6,8 +6,13 @@ import { UsersList, type UserRow } from "./users-list";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string }>;
+}) {
   await requireSuperAdmin();
+  const { deleted } = await searchParams;
   const supabase = await createClient();
   const admin = createAdminClient();
 
@@ -32,6 +37,11 @@ export default async function AdminUsersPage() {
       <PageHeader title="All readers" backHref="/settings" />
       <Page className="pt-8">
       <div className="max-w-[640px]">
+        {deleted && (
+          <p className="mb-6 rounded-md border border-accent/40 bg-accent/5 px-4 py-3 text-[13px] text-accent">
+            Account deleted.
+          </p>
+        )}
         <UsersList users={users} />
       </div>
       </Page>

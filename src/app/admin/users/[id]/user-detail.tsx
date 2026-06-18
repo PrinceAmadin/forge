@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eyebrow, PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
 import { formatHM, hmToDecimalHours } from "@/lib/time/format";
 import type { Role } from "@/lib/types";
-import { setUserRole, addManualEntry, removeManualEntry } from "../actions";
+import { setUserRole, addManualEntry, removeManualEntry, deleteUser } from "../actions";
 
 export interface HistoryItem {
   id: string;
@@ -25,12 +25,14 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 
 export function UserDetail({
   userId,
+  fullName,
   currentRole,
   isSelf,
   manualEntries,
   history,
 }: {
   userId: string;
+  fullName: string;
   currentRole: Role;
   isSelf: boolean;
   manualEntries: HistoryItem[];
@@ -204,6 +206,114 @@ export function UserDetail({
           </ul>
         )}
       </section>
+
+      {/* Danger zone — the whole page is super_admin-gated server-side
+          (requireSuperAdmin), so reaching here already means super_admin. */}
+      <DangerZone userId={userId} fullName={fullName} isSelf={isSelf} />
+    </div>
+  );
+}
+
+function DangerZone({ userId, fullName, isSelf }: { userId: string; fullName: string; isSelf: boolean }) {
+  const [open, setOpen] = useState(false);
+
+  if (isSelf) {
+    return (
+      <section>
+        <p className="text-[10px] lowercase text-rejected" style={{ letterSpacing: "0.22em" }}>
+          danger zone
+        </p>
+        <p className="mt-3 text-[12px] text-tertiary">You cannot delete your own account.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <p className="text-[10px] lowercase text-rejected" style={{ letterSpacing: "0.22em" }}>
+        danger zone
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-4 h-12 w-full rounded-md border border-rejected text-[14px] text-rejected transition-colors active:bg-rejected/10 sm:hover:bg-rejected/10"
+      >
+        Delete this account permanently
+      </button>
+      <p className="mt-2 font-mono text-[12px] text-quaternary">
+        This permanently removes the user, their profile, enrollments, submissions, marks, and
+        appeals. Audit log entries are preserved with the actor anonymized.
+      </p>
+      {open && <DeleteDialog userId={userId} fullName={fullName} onClose={() => setOpen(false)} />}
+    </section>
+  );
+}
+
+function DeleteDialog({
+  userId,
+  fullName,
+  onClose,
+}: {
+  userId: string;
+  fullName: string;
+  onClose: () => void;
+}) {
+  const firstName = fullName.trim().split(/\s+/)[0] ?? "";
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string>();
+  const matches = typed === firstName && firstName.length > 0;
+
+  async function onConfirm() {
+    if (!matches || busy) return;
+    setBusy(true);
+    setErr(undefined);
+    // On success the action redirects (navigates away); we only return here on
+    // failure, so surface the error without closing the sheet.
+    const res = await deleteUser(userId);
+    setBusy(false);
+    if (res && !res.ok) setErr(res.error);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[420px] border border-[#27272a] bg-bg p-5 sm:rounded-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="font-serif text-[22px] italic text-primary">Delete {fullName}?</p>
+        <p className="mt-2 text-[14px] text-secondary">
+          This cannot be undone. Type the user&rsquo;s first name below to confirm.
+        </p>
+        <input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder={firstName}
+          autoFocus
+          className="mt-4 w-full rounded-md border border-[#27272a] bg-[#09090b] px-4 py-3 text-primary placeholder:text-[#52525b] focus:border-accent focus:outline-none"
+        />
+        {err && <p className="mt-2 text-[13px] text-rejected">{err}</p>}
+        <div className="mt-4 flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-md border border-[#3f3f46] py-3 text-[14px] text-secondary"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={!matches || busy}
+            className="flex-1 rounded-md bg-rejected py-3 text-[14px] font-medium text-primary disabled:opacity-50"
+          >
+            {busy ? "Deleting…" : "Delete account"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

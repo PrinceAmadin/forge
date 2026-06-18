@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireSuperAdmin, getUser, getActiveChallenge } from "@/lib/auth";
 import type { Role } from "@/lib/types";
 
@@ -69,6 +70,51 @@ export async function addManualEntry(
   revalidatePath("/leaderboard");
   revalidatePath("/you");
   return { ok: true };
+}
+
+// Permanent account deletion (super_admin only). Deletes the auth.users row via
+// the service-role client, which cascades to profiles and downstream per the
+// 0011 FK rules. Audited with the deleted user's identity denormalized so the
+// record survives the row going away. §admin-delete
+export async function deleteUser(targetId: string): Promise<AdminResult> {
+  const me = await requireSuperAdmin();
+  if (targetId === me.id) {
+    return { ok: false, error: "You can't delete your own account." };
+  }
+
+  const supabase = await createClient();
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("full_name, role")
+    .eq("id", targetId)
+    .single();
+  if (!target) return { ok: false, error: "User not found." };
+
+  let email: string | null = null;
+  try {
+    const admin = createAdminClient();
+    const { data: authUser } = await admin.auth.admin.getUserById(targetId);
+    email = authUser?.user?.email ?? null;
+    const { error: delErr } = await admin.auth.admin.deleteUser(targetId);
+    if (delErr) return { ok: false, error: delErr.message };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Deletion failed." };
+  }
+
+  // Denormalize the deleted user into the audit record (no profile row remains).
+  await supabase.rpc("write_audit", {
+    p_action: "user.delete",
+    p_entity_type: "profile",
+    p_entity_id: targetId,
+    p_previous: { full_name: target.full_name, email, role: target.role },
+    p_new: null,
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/leaderboard");
+  // redirect() must stay outside the try above — it signals via a thrown
+  // NEXT_REDIRECT that the catch would otherwise swallow.
+  redirect("/admin/users?deleted=1");
 }
 
 export async function removeManualEntry(submissionId: string, targetId: string): Promise<AdminResult> {

@@ -51,6 +51,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
         <UserDetail
           userId={profile.id}
+          fullName={profile.full_name}
           currentRole={profile.role}
           isSelf={me?.id === profile.id}
           manualEntries={manualEntries}
