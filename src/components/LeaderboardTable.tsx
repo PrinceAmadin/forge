@@ -25,7 +25,19 @@ function Cell({ children, className, align = "left" }: { children: React.ReactNo
   return <td className={`${a} ${className ?? ""}`}>{children}</td>;
 }
 
-function Row({ row, prizeLine }: { row: RankedRow; prizeLine: number }) {
+function Row({
+  row,
+  prizeLine,
+  showMarks,
+  marksCount,
+  overtookName,
+}: {
+  row: RankedRow;
+  prizeLine: number;
+  showMarks: boolean;
+  marksCount: number;
+  overtookName: string | null;
+}) {
   const zone = zoneOf(row, prizeLine);
 
   const rankCls =
@@ -78,9 +90,12 @@ function Row({ row, prizeLine }: { row: RankedRow; prizeLine: number }) {
       </Cell>
       <Cell className={`${padY} pl-3 align-middle`}>
         <div className="flex items-baseline gap-2">
-          <span className={`text-[14px] ${nameCls} ${row.isYou ? "font-medium" : "font-normal"}`}>
+          <Link
+            href={`/readers/${row.participant_id}`}
+            className={`text-[14px] ${nameCls} ${row.isYou ? "font-medium" : "font-normal"} transition-colors active:text-accent sm:hover:text-accent`}
+          >
             {row.full_name}
-          </span>
+          </Link>
           {row.isYou && (
             <span className="font-serif text-[12px] italic text-accent" aria-label="your row">
               you
@@ -91,6 +106,10 @@ function Row({ row, prizeLine }: { row: RankedRow; prizeLine: number }) {
           )}
         </div>
         <div className={`mt-[3px] truncate text-[12px] ${courseCls}`}>{row.course}</div>
+        {/* Overtake badge — honors the achiever for 24h. §Marks-4 */}
+        {overtookName && (
+          <div className="mt-1 font-serif text-[12px] italic text-accent">↟ overtook {overtookName}</div>
+        )}
         {/* Mobile-only collapsed metadata. §13.5 */}
         <div className={`mt-1 font-mono text-[11px] md:hidden ${lastCls}`}>
           {[row.hall_name, `${row.verified_days}d`, timeAgo(row.last_submission)]
@@ -110,14 +129,20 @@ function Row({ row, prizeLine }: { row: RankedRow; prizeLine: number }) {
       <Cell align="right" className={`hidden ${padY} pr-3 align-middle font-mono text-[11px] md:table-cell ${lastCls}`}>
         {timeAgo(row.last_submission)}
       </Cell>
+      {/* Marks against this reader (desktop only). §Marks-1 */}
+      {showMarks && (
+        <Cell align="right" className={`hidden ${padY} pr-3 align-middle font-mono text-[11px] md:table-cell ${marksCount >= 3 ? "text-accent" : "text-tertiary"}`}>
+          {marksCount > 0 ? `● ${marksCount}` : ""}
+        </Cell>
+      )}
     </tr>
   );
 }
 
-function TheCut({ hrsToCross }: { hrsToCross: number | null }) {
+function TheCut({ hrsToCross, cols }: { hrsToCross: number | null; cols: number }) {
   return (
     <tr className="border-t border-accent">
-      <td colSpan={7} className="pb-[18px] pt-[22px]">
+      <td colSpan={cols} className="pb-[18px] pt-[22px]">
         <div className="flex items-center gap-4">
           <span
             className="font-serif text-[13px] italic lowercase text-accent"
@@ -140,10 +165,26 @@ function TheCut({ hrsToCross }: { hrsToCross: number | null }) {
 export function LeaderboardTable({
   rows,
   prizeLine,
+  marksAgainst,
+  overtakes,
 }: {
   rows: RankedRow[];
   prizeLine: number;
+  marksAgainst?: Map<string, number>;
+  overtakes?: Map<string, string[]>;
 }) {
+  const showMarks = marksAgainst != null;
+  const cols = showMarks ? 8 : 7;
+  const nameById = new Map(rows.map((r) => [r.participant_id, r.full_name]));
+
+  function overtookNameFor(markerId: string): string | null {
+    const targets = overtakes?.get(markerId);
+    if (!targets || targets.length === 0) return null;
+    const names = targets.map((t) => nameById.get(t)).filter(Boolean) as string[];
+    if (names.length === 0) return null;
+    return names.length === 1 ? names[0]! : `${names[0]} +${names.length - 1}`;
+  }
+
   // Find where to drop the cut: before the first active row past the prize line.
   const cutBeforeId =
     rows.find((r) => !r.is_disqualified && r.rank === prizeLine + 1)?.participant_id ?? null;
@@ -168,6 +209,7 @@ export function LeaderboardTable({
         <col className="hidden md:table-column" style={{ width: 44 }} />
         <col style={{ width: 64 }} />
         <col className="hidden md:table-column" style={{ width: 52 }} />
+        {showMarks && <col className="hidden md:table-column" style={{ width: 50 }} />}
       </colgroup>
       <thead>
         <tr className="text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.18em" }}>
@@ -178,6 +220,7 @@ export function LeaderboardTable({
           <th className="hidden pb-3 text-right font-normal md:table-cell">days</th>
           <th className="pb-3 text-right font-normal">hours</th>
           <th className="hidden pb-3 pr-3 text-right font-normal md:table-cell">last</th>
+          {showMarks && <th className="hidden pb-3 pr-3 text-right font-normal md:table-cell">marks</th>}
         </tr>
       </thead>
       <tbody>
@@ -186,8 +229,15 @@ export function LeaderboardTable({
             key={row.participant_id}
             renderCut={row.participant_id === cutBeforeId}
             hrsToCross={hrsToCross}
+            cols={cols}
           >
-            <Row row={row} prizeLine={prizeLine} />
+            <Row
+              row={row}
+              prizeLine={prizeLine}
+              showMarks={showMarks}
+              marksCount={marksAgainst?.get(row.participant_id) ?? 0}
+              overtookName={overtookNameFor(row.participant_id)}
+            />
           </ReactRowGroup>
         ))}
       </tbody>
@@ -199,15 +249,17 @@ export function LeaderboardTable({
 function ReactRowGroup({
   renderCut,
   hrsToCross,
+  cols,
   children,
 }: {
   renderCut: boolean;
   hrsToCross: number | null;
+  cols: number;
   children: React.ReactNode;
 }) {
   return (
     <>
-      {renderCut && <TheCut hrsToCross={hrsToCross} />}
+      {renderCut && <TheCut hrsToCross={hrsToCross} cols={cols} />}
       {children}
     </>
   );

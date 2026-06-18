@@ -35,16 +35,21 @@ export default async function AdminChallengesPage() {
               return sum + t.amount * seats;
             }, 0);
             return (
-              <li key={c.id} className="border-t border-[#27272a] py-4">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-[15px] text-primary">{c.name}</span>
-                  <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-tertiary">
-                    {c.status}
-                  </span>
-                </div>
-                <p className="mt-1 font-mono text-[12px] text-tertiary">
-                  {c.start_date} → {c.end_date} · cut at {c.prize_line_position} · {fmtNaira(pool)} pool
-                </p>
+              <li key={c.id}>
+                <Link
+                  href={`/admin/challenges/${c.id}`}
+                  className="block border-t border-[#27272a] py-4 transition-colors active:bg-zinc-900/40 sm:hover:bg-zinc-900/40"
+                >
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-[15px] text-primary">{c.name}</span>
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-tertiary">
+                      {c.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 font-mono text-[12px] text-tertiary">
+                    {c.start_date} → {c.end_date} · cut at {c.prize_line_position} · {fmtNaira(pool)} pool
+                  </p>
+                </Link>
               </li>
             );
           })}

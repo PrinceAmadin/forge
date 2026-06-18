@@ -34,6 +34,21 @@ export interface Challenge {
   timezone: string;
   daily_hour_ceiling: number;
   submission_window_hrs: number;
+  // Optional: absent (undefined) until migration 0009 is applied → treated as off.
+  marks_enabled?: boolean;
+}
+
+export type MarkStatus = "active" | "fulfilled" | "released";
+
+export interface Mark {
+  id: string;
+  challenge_id: string;
+  marker_user_id: string;
+  target_user_id: string;
+  status: MarkStatus;
+  created_at: string;
+  fulfilled_at: string | null;
+  released_at: string | null;
 }
 
 export interface PrizeTier {

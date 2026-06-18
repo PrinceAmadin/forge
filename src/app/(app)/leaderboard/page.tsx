@@ -5,6 +5,7 @@ import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
 import { formatHM } from "@/lib/time/format";
+import { marksEnabled, getLeaderboardMarks } from "@/lib/marks";
 import { Eyebrow, Page, PrimaryButton } from "@/components/ui";
 import { CampaignStrip, progressStates } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
@@ -57,6 +58,9 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
   const [user, challenge] = await Promise.all([getUser(), getActiveChallenge()]);
   const data = await getLeaderboard(challenge, user?.id ?? null);
 
+  // Marks data only when the feature is enabled (forward-safe otherwise). §Marks
+  const marks = marksEnabled(challenge) ? await getLeaderboardMarks(challenge.id) : null;
+
   if (data.rows.length === 0) {
     return (
       <div className="flex flex-col items-center gap-6 py-24 text-center">
@@ -73,7 +77,12 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
   return (
     <>
       <div className="mt-2">
-        <LeaderboardTable rows={data.rows} prizeLine={data.prizeLine} />
+        <LeaderboardTable
+          rows={data.rows}
+          prizeLine={data.prizeLine}
+          marksAgainst={marks?.againstCount}
+          overtakes={marks?.recentOvertakes}
+        />
       </div>
 
       <footer className="mt-3 border-t border-[#27272a] pt-6">

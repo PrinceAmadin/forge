@@ -4,9 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay, submittableDay } from "@/lib/challenge";
 import { formatHM } from "@/lib/time/format";
+import { padRank } from "@/lib/format";
+import { marksEnabled } from "@/lib/marks";
 import { Eyebrow, Page } from "@/components/ui";
 import { CampaignStrip, type CellState } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
+import { YourMarks, type YourMarkRow } from "./your-marks";
 import type { Submission } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -81,6 +84,44 @@ export default async function YouPage({
 
   const submittedToday = byDay.has(submittableDay(challenge) ?? -1);
 
+  // Marks. §Marks — gated; queried only when enabled (forward-safe otherwise).
+  const showMarks = marksEnabled(challenge) && !!me;
+  const rowById = new Map(board.rows.map((r) => [r.participant_id, r]));
+  const yourMarks: YourMarkRow[] = [];
+  const marksOnYou: { rank: number; name: string; course: string; behindHours: number }[] = [];
+  let activeMarkCount = 0;
+  if (showMarks) {
+    const { data: mk } = await supabase
+      .from("marks")
+      .select("id, status, marker_user_id, target_user_id")
+      .eq("challenge_id", challenge.id)
+      .or(`marker_user_id.eq.${user!.id},target_user_id.eq.${user!.id}`);
+    for (const m of mk ?? []) {
+      if (m.marker_user_id === user!.id) {
+        if (m.status === "active") activeMarkCount++;
+        const t = rowById.get(m.target_user_id);
+        yourMarks.push({
+          id: m.id,
+          status: m.status,
+          targetRank: t?.rank ?? 0,
+          targetName: t?.full_name ?? "—",
+          targetCourse: t?.course ?? "",
+          aheadHours: t && me ? Math.round((t.total_hours - me.total_hours) * 100) / 100 : 0,
+        });
+      } else if (m.status === "active") {
+        const mr = rowById.get(m.marker_user_id);
+        marksOnYou.push({
+          rank: mr?.rank ?? 0,
+          name: mr?.full_name ?? "—",
+          course: mr?.course ?? "",
+          behindHours: mr && me ? Math.round((me.total_hours - mr.total_hours) * 100) / 100 : 0,
+        });
+      }
+    }
+    yourMarks.sort((a, b) => Number(a.status !== "active") - Number(b.status !== "active") || a.targetRank - b.targetRank);
+    marksOnYou.sort((a, b) => a.rank - b.rank);
+  }
+
   return (
     <Page className="pt-10">
       <div className="pb-28 sm:pb-10">
@@ -138,6 +179,36 @@ export default async function YouPage({
                 : `${formatHM(cutGap, "long")} below the cut`}
           </p>
         </div>
+
+        {/* Marks. §Marks — only when the feature is enabled. */}
+        {showMarks && (
+          <>
+            <YourMarks marks={yourMarks} canMarkMore={activeMarkCount < 3} />
+            <section className="mt-8">
+              <Eyebrow>marks on you</Eyebrow>
+              {marksOnYou.length === 0 ? (
+                <p className="mt-3 font-serif text-[14px] italic text-tertiary">
+                  Nobody&rsquo;s chasing you yet.
+                </p>
+              ) : (
+                <ul className="mt-3">
+                  {marksOnYou.map((m, i) => (
+                    <li key={i} className="flex items-center gap-4 border-t border-[#27272a] py-3">
+                      <span className="w-10 shrink-0 font-serif text-[22px] italic text-secondary">{padRank(m.rank)}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[14px] text-primary">{m.name}</span>
+                        <span className="block truncate text-[12px] text-tertiary">{m.course}</span>
+                      </span>
+                      <span className="shrink-0 font-mono text-[13px] text-tertiary">
+                        −{formatHM(Math.max(0, m.behindHours), "long")} behind
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
 
         {/* Campaign strip. §6.2 */}
         <div className="mt-8 overflow-x-auto">
