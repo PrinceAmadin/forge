@@ -27,7 +27,7 @@ export async function reviewSubmission(
 
   revalidatePath("/leaderboard");
   revalidatePath("/you");
-  revalidatePath("/admin");
+  revalidatePath("/admin/queue");
   return { ok: true };
 }
 
@@ -58,6 +58,6 @@ export async function disqualifyParticipant(
   if (error) return { ok: false, error: "That didn't go through. Try again." };
 
   revalidatePath("/leaderboard");
-  revalidatePath("/admin");
+  revalidatePath("/admin/queue");
   return { ok: true };
 }

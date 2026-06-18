@@ -65,3 +65,10 @@ export async function requireAdmin(): Promise<Profile> {
   if (profile.role !== "admin" && profile.role !== "super_admin") redirect("/leaderboard");
   return profile;
 }
+
+export async function requireSuperAdmin(): Promise<Profile> {
+  const profile = await getProfile();
+  if (!profile) redirect("/auth");
+  if (profile.role !== "super_admin") redirect("/leaderboard");
+  return profile;
+}
