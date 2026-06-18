@@ -1,12 +1,20 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { requestUploadUrl, createSubmission, type SubmitResult } from "./actions";
+import { requestUploadUrl, createSubmission } from "./actions";
 import { PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
-import { formatHM, hmToDecimalHours, normalizeHM } from "@/lib/time/format";
+import { hmToDecimalHours, normalizeHM } from "@/lib/time/format";
+
+type Step = "idle" | "uploading" | "saving" | "done";
+
+const MAX_BYTES = 5 * 1024 * 1024; // 5MB — block huge images before they stall.
+
+// Reject after `ms` with a real message so the UI never sticks on a hung promise.
+function timeoutAfter<T = never>(ms: number, message: string): Promise<T> {
+  return new Promise<T>((_, reject) => setTimeout(() => reject(new Error(message)), ms));
+}
 
 function CameraIcon() {
   return (
@@ -51,7 +59,7 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
   const [whatsappErr, setWhatsappErr] = useState<string>();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
-  const [done, setDone] = useState<SubmitResult>();
+  const [step, setStep] = useState<Step>("idle");
 
   const hasTime = Number(hrs || 0) > 0 || Number(mins || 0) > 0;
   const canSubmit = hasTime && topic.trim() !== "" && Boolean(file) && !pending;
@@ -100,6 +108,40 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  // Critical path only: signed-URL → compress → upload (25s cap) → insert.
+  // No OCR, no pHash on the client. Each step advances the button label.
+  async function submitFlow(decimal: number, theFile: File): Promise<void> {
+    const target = await requestUploadUrl();
+    if (!target.ok) throw new Error(target.error);
+
+    const blob = await compress(theFile);
+
+    const supabase = createClient();
+    const upload = supabase.storage
+      .from("submissions")
+      .uploadToSignedUrl(target.target.path, target.target.token, blob, {
+        contentType: "image/jpeg",
+      });
+    const { error: upErr } = await Promise.race([
+      upload,
+      timeoutAfter<{ error: { message: string } | null }>(
+        25000,
+        "Upload timed out. Check your connection and try again."
+      ),
+    ]);
+    if (upErr) throw new Error(upErr.message || "The upload didn't go through. Try again.");
+
+    setStep("saving");
+    const result = await createSubmission({
+      day: target.target.day,
+      hoursClaimed: decimal,
+      topic: topic.trim(),
+      storagePath: target.target.path,
+      whatsappTime: whatsapp.trim() || null,
+    });
+    if (!result.ok) throw new Error(result.error || "Couldn't save your submission. Try again.");
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(undefined);
@@ -115,76 +157,38 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
       return;
     }
     if (!file) return;
+    // Block oversized images before we waste 30s timing out on them. §guard
+    if (file.size > MAX_BYTES) {
+      setError("Screenshot too large. Please use a smaller image.");
+      return;
+    }
+
     setPending(true);
-
-    const target = await requestUploadUrl();
-    if (!target.ok) {
-      setError(target.error);
+    setStep("uploading");
+    try {
+      // Hard overall cap so the button can never stick on a hung promise.
+      await Promise.race([
+        submitFlow(decimal, file),
+        timeoutAfter(30000, "Submit timed out. Check your connection and try again."),
+      ]);
+      setStep("done");
+      router.push("/you?submitted=1");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "Submit failed. Try again.");
+      setStep("idle");
       setPending(false);
-      return;
     }
-
-    const blob = await compress(file);
-    const supabase = createClient();
-    const { error: upErr } = await supabase.storage
-      .from("submissions")
-      .uploadToSignedUrl(target.target.path, target.target.token, blob, {
-        contentType: "image/jpeg",
-      });
-    if (upErr) {
-      setError("The upload didn't go through. Try again.");
-      setPending(false);
-      return;
-    }
-
-    const result = await createSubmission({
-      day: target.target.day,
-      hoursClaimed: decimal,
-      topic: topic.trim(),
-      storagePath: target.target.path,
-      whatsappTime: whatsapp.trim() || null,
-    });
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    setDone(result);
   }
 
-  if (done) {
-    return (
-      <div className="flex flex-col gap-5">
-        <p className="font-serif text-[36px] italic leading-none text-primary">Done.</p>
-        <p className="text-[14px] text-secondary">Day {done.day} logged. Awaiting verification.</p>
-        {done.rank != null && (
-          <div className="text-[13px]">
-            <p className="text-primary">
-              You are #{done.rank} of {done.activeCount} active
-            </p>
-            <p className={done.aboveCut ? "text-tertiary" : "text-accent"}>
-              {done.hrsFromCut == null
-                ? "—"
-                : done.aboveCut
-                  ? `${formatHM(done.hrsFromCut, "long")} above the cut`
-                  : `${formatHM(done.hrsFromCut, "long")} to cross`}
-            </p>
-          </div>
-        )}
-        <div className="mt-2 flex flex-col gap-3">
-          <Link href="/leaderboard">
-            <PrimaryButton className="h-[52px]">View leaderboard</PrimaryButton>
-          </Link>
-          <button
-            onClick={() => router.refresh()}
-            className="text-[13px] text-tertiary"
-          >
-            Back to today
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const submitLabel =
+    step === "uploading"
+      ? "Uploading screenshot…"
+      : step === "saving"
+        ? "Saving submission…"
+        : step === "done"
+          ? "Submitted ✓"
+          : "Submit for verification";
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
@@ -294,7 +298,7 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
       {/* In-flow (not fixed): the layout's bottom padding keeps it clear of the
           tab bar, so it never hides behind the nav on mobile. §FIX-2 */}
       <PrimaryButton type="submit" disabled={!canSubmit} className="h-14 text-[16px]">
-        {pending ? "Submitting…" : "Submit for verification"}
+        {submitLabel}
       </PrimaryButton>
     </form>
   );

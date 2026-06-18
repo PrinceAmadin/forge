@@ -26,10 +26,10 @@ function statusColor(s: string): string {
 export default async function YouPage({
   searchParams,
 }: {
-  searchParams: Promise<{ appealed?: string }>;
+  searchParams: Promise<{ appealed?: string; submitted?: string }>;
 }) {
   const profile = await requireOnboardedViewer();
-  const { appealed } = await searchParams;
+  const { appealed, submitted } = await searchParams;
   const [challenge, user] = await Promise.all([getActiveChallenge(), getUser()]);
   const supabase = await createClient();
 
@@ -146,6 +146,11 @@ export default async function YouPage({
           <SettingsCog className="-mr-2.5 -mt-2" />
         </div>
 
+        {submitted && (
+          <p className="mt-6 rounded-md border border-accent/40 bg-accent/5 px-4 py-3 text-[13px] text-accent">
+            Submitted. An admin will verify shortly.
+          </p>
+        )}
         {appealed && (
           <p className="mt-6 rounded-md border border-[#27272a] px-4 py-3 text-[13px] text-secondary">
             Appeal submitted. The team will review it.

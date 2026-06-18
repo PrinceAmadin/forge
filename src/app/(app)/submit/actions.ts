@@ -2,10 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getActiveChallenge } from "@/lib/auth";
-import { getLeaderboard } from "@/lib/leaderboard";
-import { computePHash, hammingDistance } from "@/lib/phash";
 import { submittableDay, dayIsOpen } from "@/lib/challenge";
 
 const BUCKET = "submissions";
@@ -73,7 +71,10 @@ export interface SubmitResult {
   day?: number;
 }
 
-// Step 5–6: re-validate everything server-side, compute pHash, flag, insert. §11
+// Step 5–6: re-validate server-side and insert. OCR + pHash are intentionally
+// NOT computed here — they were stalling/slowing the submit path. screenshot_phash
+// and ocr_extracted_hours are stored null; admins review the screenshot manually.
+// Duplicate/OCR-mismatch flags are dropped for V1; the cheap flags remain. §critical-path
 export async function createSubmission(input: CreateInput): Promise<SubmitResult> {
   const supabase = await createClient();
   const {
@@ -93,28 +94,16 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
   if (!topic) return { ok: false, error: "Tell us what you studied." };
   if (!dayIsOpen(challenge, input.day)) return { ok: false, error: "That day is closed." };
 
-  // Download the uploaded image with the service role to fingerprint it.
-  const admin = createAdminClient();
-  const { data: blob, error: dlErr } = await admin.storage.from(BUCKET).download(input.storagePath);
-  if (dlErr || !blob) return { ok: false, error: "We couldn't read that screenshot. Re-upload it." };
-  const buffer = Buffer.from(await blob.arrayBuffer());
-  const phash = await computePHash(buffer);
-
-  // Flag (never auto-reject). §11
+  // Cheap flags only — no image download/fingerprint on the critical path. §11
   const flags: string[] = [];
-
   const { data: priors } = await supabase
     .from("submissions")
-    .select("screenshot_phash, status")
+    .select("status")
     .eq("challenge_id", challenge.id)
     .eq("participant_id", user.id);
-  if ((priors ?? []).some((p) => hammingDistance(p.screenshot_phash as string, phash) <= 5)) {
-    flags.push("duplicate_phash");
-  }
   const rejectedCount = (priors ?? []).filter((p) => p.status === "rejected").length;
   if (rejectedCount >= 2) flags.push("participant_flagged");
   if (hours > 16) flags.push("excessive_hours");
-  if (input.ocrHours != null && Math.abs(input.ocrHours - hours) > 0.5) flags.push("ocr_mismatch");
   if (input.day < submittableDay(challenge)!) flags.push("submission_window_late");
 
   const hdrs = await headers();
@@ -127,8 +116,8 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
     hours_claimed: hours,
     topic,
     screenshot_path: input.storagePath,
-    screenshot_phash: phash,
-    ocr_extracted_hours: input.ocrHours ?? null,
+    screenshot_phash: null,
+    ocr_extracted_hours: null,
     whatsapp_post_time: input.whatsappTime || null,
     status: "pending",
     flag_reasons: flags,
@@ -148,28 +137,5 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
   revalidatePath("/leaderboard");
   revalidatePath("/you");
 
-  // Current standing for the "Done" moment (based on confirmed hours). §6.3
-  const board = await getLeaderboard(challenge, user.id);
-  const me = board.rows.find((r) => r.participant_id === user.id);
-  let hrsFromCut: number | null = null;
-  let aboveCut = true;
-  if (me && !me.is_disqualified) {
-    const lastIn = board.rows.find((r) => !r.is_disqualified && r.rank === board.prizeLine);
-    const firstOut = board.rows.find((r) => !r.is_disqualified && r.rank === board.prizeLine + 1);
-    aboveCut = me.rank <= board.prizeLine;
-    if (aboveCut && firstOut) {
-      hrsFromCut = Math.round((me.total_hours - firstOut.total_hours) * 100) / 100;
-    } else if (!aboveCut && lastIn) {
-      hrsFromCut = Math.round((lastIn.total_hours - me.total_hours) * 100) / 100;
-    }
-  }
-
-  return {
-    ok: true,
-    rank: me?.rank ?? null,
-    activeCount: board.activeCount,
-    hrsFromCut,
-    aboveCut,
-    day: input.day,
-  };
+  return { ok: true, day: input.day };
 }
