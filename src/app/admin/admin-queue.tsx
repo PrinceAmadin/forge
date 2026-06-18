@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { reviewSubmission, updateNotes, disqualifyParticipant } from "./actions";
+import { PageHeader } from "@/components/nav/page-header";
 import { timeAgo } from "@/lib/format";
 import { formatHM } from "@/lib/time/format";
 
@@ -114,22 +115,27 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
 
   if (items.length === 0) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-5 text-center">
-        <p className="font-serif text-[22px] italic text-primary">Queue clear. Refresh to check again.</p>
-        <button
-          onClick={() => router.refresh()}
-          className="rounded-md border border-[#3f3f46] px-5 py-3 text-[14px] text-primary active:border-[#52525b]"
-        >
-          Refresh
-        </button>
-      </div>
+      <>
+        <PageHeader title="Review queue" backHref="/settings" />
+        <div className="flex flex-col items-center justify-center gap-5 px-5 py-32 text-center">
+          <p className="font-serif text-[22px] italic text-primary">Queue clear. Refresh to check again.</p>
+          <button
+            onClick={() => router.refresh()}
+            className="rounded-md border border-[#3f3f46] px-5 py-3 text-[14px] text-primary active:border-[#52525b]"
+          >
+            Refresh
+          </button>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-dvh sm:flex">
+    <>
+    <PageHeader title="Review queue" backHref="/settings" />
+    <div className="sm:flex">
       {/* Left list */}
-      <aside className="border-b border-[#27272a] sm:h-dvh sm:w-[320px] sm:shrink-0 sm:overflow-y-auto sm:border-b-0 sm:border-r">
+      <aside className="border-b border-[#27272a] sm:h-[calc(100dvh-57px)] sm:w-[320px] sm:shrink-0 sm:overflow-y-auto sm:border-b-0 sm:border-r">
         <div className="border-b border-[#27272a] px-5 py-4">
           <p className="text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.22em" }}>
             forge · review queue
@@ -176,7 +182,7 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
 
       {/* Right detail */}
       {current && (
-        <section className="flex-1 px-5 py-6 pb-32 sm:h-dvh sm:overflow-y-auto sm:px-8">
+        <section className="flex-1 px-5 py-6 pb-32 sm:h-[calc(100dvh-57px)] sm:overflow-y-auto sm:px-8">
           <button
             type="button"
             onClick={() => setZoom(true)}
@@ -299,6 +305,7 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
         />
       )}
     </div>
+    </>
   );
 }
 

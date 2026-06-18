@@ -3,8 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { Page } from "@/components/ui";
+import { PageHeader } from "@/components/nav/page-header";
 import { timeAgo } from "@/lib/format";
 import { formatHM } from "@/lib/time/format";
 
@@ -41,12 +41,12 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
   const isManual = sub.topic.startsWith("Manual entry");
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title={`Day ${sub.challenge_day}`} backHref="/you" />
+      <Page className="pt-8">
       <div className="max-w-[480px]">
-        <BackButton href="/you" />
-        <div className="mt-3">
-          <Eyebrow>day {sub.challenge_day}</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] italic leading-none text-primary">
+        <div>
+          <h1 className="font-serif text-[36px] italic leading-none text-primary">
             {formatHM(sub.hours_credited ?? sub.hours_claimed, "long")}
           </h1>
           <p className="mt-2 font-mono text-[12px] text-tertiary">
@@ -91,6 +91,7 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
           </div>
         )}
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

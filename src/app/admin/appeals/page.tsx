@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { Page } from "@/components/ui";
+import { PageHeader } from "@/components/nav/page-header";
 import { timeAgo } from "@/lib/format";
 import { formatHM } from "@/lib/time/format";
 
@@ -34,14 +34,10 @@ export default async function AdminAppealsPage() {
   const nameById = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title="Review appeals" backHref="/settings" />
+      <Page className="pt-8">
       <div className="max-w-[640px]">
-        <BackButton href="/admin/queue" />
-        <div className="mt-3">
-          <Eyebrow>operations</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">Appeals</h1>
-        </div>
-
         {appeals.length === 0 ? (
           <p className="mt-8 text-[14px] text-tertiary">No appeals waiting.</p>
         ) : (
@@ -67,6 +63,7 @@ export default async function AdminAppealsPage() {
           </ul>
         )}
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { marksEnabled, markEligibility } from "@/lib/marks";
 import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/nav/page-header";
 import { formatHM } from "@/lib/time/format";
 import { padRank } from "@/lib/format";
 import { MarkButton } from "./mark-button";
@@ -49,16 +49,13 @@ export default async function ReaderProfilePage({ params }: { params: Promise<{ 
   }
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title={target.full_name} backHref="/leaderboard" />
+      <Page className="pt-8">
       <div className="max-w-[480px]">
-        <BackButton href="/leaderboard" />
-        <div className="mt-3">
-          <Eyebrow>reader</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">{target.full_name}</h1>
-          <p className="mt-2 text-[13px] text-tertiary">
-            {[target.course, target.hall_name].filter(Boolean).join(" · ")}
-          </p>
-        </div>
+        <p className="text-[13px] text-tertiary">
+          {[target.course, target.hall_name].filter(Boolean).join(" · ")}
+        </p>
 
         <div className="mt-8 flex items-baseline gap-8">
           <div>
@@ -91,6 +88,7 @@ export default async function ReaderProfilePage({ params }: { params: Promise<{ 
           />
         )}
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

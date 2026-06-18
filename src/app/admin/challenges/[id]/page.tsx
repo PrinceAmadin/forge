@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireSuperAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/nav/page-header";
 import { fmtNaira } from "@/lib/format";
 import type { Challenge, PrizeTier } from "@/lib/types";
 import { MarksToggle } from "./feature-toggle";
@@ -25,16 +25,13 @@ export default async function AdminChallengePage({ params }: { params: Promise<{
   }, 0);
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title={challenge.name} backHref="/admin/challenges" />
+      <Page className="pt-8">
       <div className="max-w-[560px]">
-        <BackButton href="/admin/challenges" />
-        <div className="mt-3">
-          <Eyebrow>challenge</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">{challenge.name}</h1>
-          <p className="mt-2 font-mono text-[12px] text-tertiary">
-            {challenge.status} · {challenge.start_date} → {challenge.end_date} · {fmtNaira(pool)} pool
-          </p>
-        </div>
+        <p className="font-mono text-[12px] text-tertiary">
+          {challenge.status} · {challenge.start_date} → {challenge.end_date} · {fmtNaira(pool)} pool
+        </p>
 
         <section className="mt-10">
           <Eyebrow>features</Eyebrow>
@@ -47,6 +44,7 @@ export default async function AdminChallengePage({ params }: { params: Promise<{
           Editing &amp; lifecycle transitions — coming in v1.1
         </p>
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

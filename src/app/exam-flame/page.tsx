@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser, getActiveChallenge } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, PrimaryButton } from "@/components/ui";
+import { Wordmark } from "@/components/nav/Wordmark";
 import { fmtNaira } from "@/lib/format";
 import { formatDateRange } from "@/lib/challenge";
 import type { PrizeTier } from "@/lib/types";
@@ -45,6 +46,11 @@ export default async function ExamFlamePage() {
 
   return (
     <div className="mx-auto min-h-dvh w-full max-w-[640px] px-5 pb-32 pt-12 sm:px-7">
+      {/* This page sits outside the app shell (no rail/tab bar) — the wordmark
+          is the consistent way home. PROBLEM-3 */}
+      <div className="mb-6 flex justify-end">
+        <Wordmark />
+      </div>
       <Eyebrow accent>forge · live challenge</Eyebrow>
       <h1 className="mt-3 font-serif text-[48px] leading-[1.05] text-primary">
         The Exam <span className="italic">Flame</span>

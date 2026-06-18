@@ -9,6 +9,7 @@ import { marksEnabled } from "@/lib/marks";
 import { Eyebrow, Page } from "@/components/ui";
 import { CampaignStrip, type CellState } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
+import { Wordmark } from "@/components/nav/Wordmark";
 import { YourMarks, type YourMarkRow } from "./your-marks";
 import type { Submission } from "@/lib/types";
 
@@ -125,6 +126,10 @@ export default async function YouPage({
   return (
     <Page className="pt-10">
       <div className="pb-28 sm:pb-10">
+        {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
+        <div className="mb-3 flex justify-end sm:hidden">
+          <Wordmark />
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <Eyebrow>you</Eyebrow>

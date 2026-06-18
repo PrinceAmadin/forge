@@ -3,7 +3,7 @@ import Image from "next/image";
 import { requireAdmin } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/nav/page-header";
 import { formatHM } from "@/lib/time/format";
 import { ResolveButtons } from "./resolve-buttons";
 
@@ -46,14 +46,14 @@ export default async function AppealDetailPage({ params }: { params: Promise<{ i
   ]);
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title={`Appeal · day ${sub.challenge_day}`} backHref="/admin/appeals" />
+      <Page className="pt-8">
       <div className="max-w-[560px]">
-        <BackButton href="/admin/appeals" />
-        <div className="mt-3">
-          <Eyebrow>appeal</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">
-            {prof?.full_name ?? "Unknown"} · Day {sub.challenge_day}
-          </h1>
+        <div>
+          <h2 className="font-serif text-[24px] leading-none text-primary">
+            {prof?.full_name ?? "Unknown"}
+          </h2>
           <p className="mt-2 font-mono text-[12px] text-tertiary">
             claimed {formatHM(sub.hours_claimed, "long")} · appeal {appeal.status}
           </p>
@@ -87,6 +87,7 @@ export default async function AppealDetailPage({ params }: { params: Promise<{ i
           </p>
         )}
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 import { requireSuperAdmin } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { Page } from "@/components/ui";
+import { PageHeader } from "@/components/nav/page-header";
 import { UsersList, type UserRow } from "./users-list";
 
 export const dynamic = "force-dynamic";
@@ -28,15 +28,13 @@ export default async function AdminUsersPage() {
   }));
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title="All readers" backHref="/settings" />
+      <Page className="pt-8">
       <div className="max-w-[640px]">
-        <BackButton href="/admin/queue" />
-        <div className="mt-3">
-          <Eyebrow>users</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">All readers</h1>
-        </div>
         <UsersList users={users} />
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

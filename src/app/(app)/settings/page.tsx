@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser, getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { PageHeader } from "@/components/nav/page-header";
 import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -26,13 +26,11 @@ export default async function SettingsPage() {
   const isSuper = profile.role === "super_admin";
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title="Settings" backHref="/leaderboard" />
+      <Page className="pt-8">
       <div className="max-w-[480px]">
-        <div className="mb-4">
-          <BackButton />
-        </div>
-        <Eyebrow>settings</Eyebrow>
-        <h1 className="mt-3 text-[22px] font-medium text-primary">{profile.full_name}</h1>
+        <h1 className="text-[22px] font-medium text-primary">{profile.full_name}</h1>
         <p className="mt-1 text-[13px] text-secondary">
           {[hall?.name, profile.course].filter(Boolean).join(" · ")}
         </p>
@@ -77,7 +75,8 @@ export default async function SettingsPage() {
 
         <p className="mt-10 font-mono text-[11px] text-quaternary">Forge · v0.1</p>
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }
 

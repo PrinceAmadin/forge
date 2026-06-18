@@ -9,6 +9,7 @@ import { marksEnabled, getLeaderboardMarks } from "@/lib/marks";
 import { Eyebrow, Page, PrimaryButton } from "@/components/ui";
 import { CampaignStrip, progressStates } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
+import { Wordmark } from "@/components/nav/Wordmark";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { RefreshOnFocus } from "@/components/RefreshOnFocus";
 import Link from "next/link";
@@ -26,6 +27,10 @@ export default async function LeaderboardPage() {
   return (
     <Page className="pt-10">
       <RefreshOnFocus />
+      {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
+      <div className="mb-3 flex justify-end sm:hidden">
+        <Wordmark />
+      </div>
       {/* Header — title left, campaign indicator right. §6.1 */}
       <header className="flex items-start justify-between gap-4">
         <div>

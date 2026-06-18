@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { requireSuperAdmin, getUser } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { Eyebrow, Page } from "@/components/ui";
-import { BackButton } from "@/components/BackButton";
+import { Page } from "@/components/ui";
+import { PageHeader } from "@/components/nav/page-header";
 import { UserDetail, type HistoryItem } from "./user-detail";
 
 export const dynamic = "force-dynamic";
@@ -41,16 +41,13 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const history = subs.filter((s) => !s.topic.startsWith(MANUAL_PREFIX));
 
   return (
-    <Page className="pt-10">
+    <>
+      <PageHeader title={profile.full_name} backHref="/admin/users" />
+      <Page className="pt-8">
       <div className="max-w-[560px]">
-        <BackButton href="/admin/users" />
-        <div className="mt-3">
-          <Eyebrow>user</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">{profile.full_name}</h1>
-          <p className="mt-2 text-[13px] text-secondary">
-            {[hall?.name, profile.course, authUser.data.user?.email].filter(Boolean).join(" · ")}
-          </p>
-        </div>
+        <p className="text-[13px] text-secondary">
+          {[hall?.name, profile.course, authUser.data.user?.email].filter(Boolean).join(" · ")}
+        </p>
 
         <UserDetail
           userId={profile.id}
@@ -60,6 +57,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           history={history}
         />
       </div>
-    </Page>
+      </Page>
+    </>
   );
 }

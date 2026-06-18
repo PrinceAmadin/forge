@@ -5,6 +5,7 @@ import { submittableDay, formatLagosDate } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
 import { Eyebrow, PrimaryButton } from "@/components/ui";
 import { SettingsCog } from "@/components/SettingsCog";
+import { Wordmark } from "@/components/nav/Wordmark";
 import { formatHM } from "@/lib/time/format";
 import { SubmitForm } from "./submit-form";
 
@@ -19,6 +20,10 @@ export default async function SubmitPage() {
   const shell = (children: React.ReactNode) => (
     <div className="relative mx-auto w-full max-w-[480px] px-5 pb-28 pt-10 sm:px-7">
       <SettingsCog className="absolute right-3 top-7 sm:right-5" />
+      {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
+      <div className="mb-5 flex sm:hidden">
+        <Wordmark />
+      </div>
       {children}
     </div>
   );
