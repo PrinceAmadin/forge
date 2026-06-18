@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { submittableDay, formatLagosDate } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
 import { Eyebrow, PrimaryButton } from "@/components/ui";
+import { SettingsCog } from "@/components/SettingsCog";
 import { SubmitForm } from "./submit-form";
 
 export const dynamic = "force-dynamic";
@@ -13,8 +14,12 @@ export default async function SubmitPage() {
   const [challenge, user] = await Promise.all([getActiveChallenge(), getUser()]);
   const day = submittableDay(challenge);
 
+  // Cog sits top-right on every submit state (sole right-side header element).
   const shell = (children: React.ReactNode) => (
-    <div className="mx-auto w-full max-w-[480px] px-5 pb-28 pt-10 sm:px-7">{children}</div>
+    <div className="relative mx-auto w-full max-w-[480px] px-5 pb-28 pt-10 sm:px-7">
+      <SettingsCog className="absolute right-3 top-7 sm:right-5" />
+      {children}
+    </div>
   );
 
   if (challenge.status !== "active") {

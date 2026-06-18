@@ -6,6 +6,7 @@ import { currentChallengeDay } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
 import { Eyebrow, Page, PrimaryButton } from "@/components/ui";
 import { CampaignStrip, progressStates } from "@/components/CampaignStrip";
+import { SettingsCog } from "@/components/SettingsCog";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { RefreshOnFocus } from "@/components/RefreshOnFocus";
 import Link from "next/link";
@@ -29,13 +30,16 @@ export default async function LeaderboardPage() {
           <Eyebrow>forge · the exam flame</Eyebrow>
           <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">Leaderboard</h1>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <p className="font-serif text-[18px] italic leading-none">
-            <span className="text-primary">{day > 0 ? toRoman(day) : "—"}</span>
-            <span className="text-[#52525b]"> ╱ {toRoman(challenge.duration_days)}</span>
-          </p>
-          <CampaignStrip states={progressStates(challenge.duration_days, day)} size="sm" />
-          <p className="font-mono text-[11px] text-tertiary">Updated moments ago</p>
+        <div className="flex items-start gap-2">
+          <div className="flex flex-col items-end gap-2">
+            <p className="font-serif text-[18px] italic leading-none">
+              <span className="text-primary">{day > 0 ? toRoman(day) : "—"}</span>
+              <span className="text-[#52525b]"> ╱ {toRoman(challenge.duration_days)}</span>
+            </p>
+            <CampaignStrip states={progressStates(challenge.duration_days, day)} size="sm" />
+            <p className="font-mono text-[11px] text-tertiary">Updated moments ago</p>
+          </div>
+          <SettingsCog className="-mr-2.5 -mt-2.5" />
         </div>
       </header>
 

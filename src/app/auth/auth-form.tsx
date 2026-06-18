@@ -22,6 +22,9 @@ export function AuthForm() {
     setPending(true);
 
     const supabase = createClient();
+    // For OTP, success is `error === null`. `data` is { user: null, session: null }
+    // by design until the code is verified — it must NOT be used as a success
+    // signal. We only branch on `error`.
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
       options: { shouldCreateUser: true },
@@ -29,9 +32,22 @@ export function AuthForm() {
 
     setPending(false);
     if (error) {
-      setError("That didn't go through. Try again.");
+      const msg = error.message?.trim();
+      const status = error.status ?? 0;
+      const rateLimited = status === 429 || /rate limit|too many|after \d+ seconds/i.test(msg ?? "");
+      // Supabase's default mailer can return a 500 with an empty body ("{}")
+      // when email delivery is throttled — surface that honestly, not generically.
+      const transient = status >= 500 || !msg || msg === "{}";
+      setError(
+        rateLimited
+          ? "Too many requests. Wait about a minute, then try again."
+          : transient
+            ? "We couldn't send your code just now. Try again in a moment."
+            : msg!
+      );
       return;
     }
+    // error === null → the code is on its way. Hand the email to the verify step.
     const q = new URLSearchParams({ email: trimmed, next });
     router.push(`/auth/verify?${q.toString()}`);
   }

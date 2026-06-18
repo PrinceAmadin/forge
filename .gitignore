@@ -30,3 +30,6 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dev server log
+dev.log

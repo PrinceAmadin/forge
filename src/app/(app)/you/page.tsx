@@ -6,6 +6,7 @@ import { currentChallengeDay, submittableDay } from "@/lib/challenge";
 import { fmtHours } from "@/lib/format";
 import { Eyebrow, Page } from "@/components/ui";
 import { CampaignStrip, type CellState } from "@/components/CampaignStrip";
+import { SettingsCog } from "@/components/SettingsCog";
 import type { Submission } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -78,11 +79,16 @@ export default async function YouPage() {
   return (
     <Page className="pt-10">
       <div className="pb-28 sm:pb-10">
-        <Eyebrow>you</Eyebrow>
-        <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">{profile.full_name}</h1>
-        <p className="mt-2 text-[13px] text-tertiary">
-          {[profile.course, hall?.name, profile.academic_level].filter(Boolean).join(" · ")}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Eyebrow>you</Eyebrow>
+            <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">{profile.full_name}</h1>
+            <p className="mt-2 text-[13px] text-tertiary">
+              {[profile.course, hall?.name, profile.academic_level].filter(Boolean).join(" · ")}
+            </p>
+          </div>
+          <SettingsCog className="-mr-2.5 -mt-2" />
+        </div>
 
         {/* Hero number. §6.2 */}
         <div className="mt-8">
