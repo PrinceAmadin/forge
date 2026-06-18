@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { requestUploadUrl, createSubmission, type SubmitResult } from "./actions";
 import { PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
-import { fmtHours } from "@/lib/format";
+import { formatHM, hmToDecimalHours, normalizeHM } from "@/lib/time/format";
 
 function CameraIcon() {
   return (
@@ -44,14 +44,48 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string>();
   const [file, setFile] = useState<File>();
-  const [hours, setHours] = useState("");
+  const [hrs, setHrs] = useState("");
+  const [mins, setMins] = useState("");
   const [topic, setTopic] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappErr, setWhatsappErr] = useState<string>();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<SubmitResult>();
 
-  const canSubmit = hours.trim() !== "" && topic.trim() !== "" && Boolean(file) && !pending;
+  const hasTime = Number(hrs || 0) > 0 || Number(mins || 0) > 0;
+  const canSubmit = hasTime && topic.trim() !== "" && Boolean(file) && !pending;
+
+  // Normalize minutes >= 60 into hours on blur (e.g. 90m → 1h 30m). §ISSUE-3
+  function normalizeOnBlur() {
+    const h = Number(hrs || 0);
+    const m = Number(mins || 0);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return;
+    if (m >= 60) {
+      const n = normalizeHM(h, m);
+      setHrs(String(n.h));
+      setMins(String(n.m));
+    }
+  }
+
+  // WhatsApp time: keep digits + colon, auto-insert ":" after 2 digits. §ISSUE-2
+  function onWhatsappChange(raw: string) {
+    let v = raw.replace(/[^\d:]/g, "");
+    const digits = v.replace(/:/g, "");
+    if (!v.includes(":") && digits.length > 2) {
+      v = `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+    }
+    setWhatsapp(v.slice(0, 5));
+    setWhatsappErr(undefined);
+  }
+
+  function validateWhatsapp() {
+    if (whatsapp && !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(whatsapp)) {
+      setWhatsappErr("Use HH:MM format, like 22:14");
+    } else {
+      setWhatsappErr(undefined);
+    }
+  }
 
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -69,9 +103,15 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(undefined);
-    const h = Number(hours);
-    if (!Number.isFinite(h) || h <= 0 || h > 24) {
-      setError("Hours must be between 0.1 and 24.");
+    const h = Number(hrs || 0);
+    const m = Number(mins || 0);
+    if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || m < 0) {
+      setError("Enter valid hours and minutes.");
+      return;
+    }
+    const decimal = hmToDecimalHours(h, m);
+    if (decimal <= 0 || decimal > 24) {
+      setError("Enter between 1 minute and 24 hours.");
       return;
     }
     if (!file) return;
@@ -99,7 +139,7 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
 
     const result = await createSubmission({
       day: target.target.day,
-      hoursClaimed: h,
+      hoursClaimed: decimal,
       topic: topic.trim(),
       storagePath: target.target.path,
       whatsappTime: whatsapp.trim() || null,
@@ -126,8 +166,8 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
               {done.hrsFromCut == null
                 ? "—"
                 : done.aboveCut
-                  ? `${fmtHours(done.hrsFromCut)} hrs above the cut`
-                  : `${fmtHours(done.hrsFromCut)} hrs to cross`}
+                  ? `${formatHM(done.hrsFromCut, "long")} above the cut`
+                  : `${formatHM(done.hrsFromCut, "long")} to cross`}
             </p>
           </div>
         )}
@@ -148,17 +188,41 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>
-      {/* Hours — large serif italic, bottom border only. §6.3 */}
+      {/* Time read today — hours + minutes, large serif. §ISSUE-3 */}
       <div>
-        <Label htmlFor="hours">Hours read today</Label>
-        <input
-          id="hours"
-          value={hours}
-          onChange={(e) => setHours(e.target.value)}
-          inputMode="decimal"
-          placeholder="8.5"
-          className="w-full border-b border-[#27272a] bg-transparent pb-2 text-right font-serif text-[48px] italic text-primary placeholder:text-[#3f3f46] focus:border-accent focus:outline-none"
-        />
+        <Label>Time read today</Label>
+        <div className="flex items-end gap-6">
+          <div className="flex-1">
+            <p className="mb-1 text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.22em" }}>
+              hours
+            </p>
+            <input
+              id="hours"
+              value={hrs}
+              onChange={(e) => setHrs(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+              onBlur={normalizeOnBlur}
+              inputMode="numeric"
+              placeholder="8"
+              aria-label="Hours read"
+              className="w-full border-b border-[#27272a] bg-transparent pb-2 text-right font-serif text-[48px] italic text-primary placeholder:text-[#3f3f46] focus:border-accent focus:outline-none"
+            />
+          </div>
+          <div className="flex-1">
+            <p className="mb-1 text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.22em" }}>
+              minutes
+            </p>
+            <input
+              id="minutes"
+              value={mins}
+              onChange={(e) => setMins(e.target.value.replace(/[^\d]/g, "").slice(0, 2))}
+              onBlur={normalizeOnBlur}
+              inputMode="numeric"
+              placeholder="30"
+              aria-label="Minutes read"
+              className="w-full border-b border-[#27272a] bg-transparent pb-2 text-right font-serif text-[48px] italic text-primary placeholder:text-[#3f3f46] focus:border-accent focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
 
       <div>
@@ -213,11 +277,16 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
         <Label htmlFor="whatsapp">What time did you post in the WhatsApp group?</Label>
         <TextInput
           id="whatsapp"
+          type="text"
           value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
+          onChange={(e) => onWhatsappChange(e.target.value)}
+          onBlur={validateWhatsapp}
           inputMode="numeric"
-          placeholder="e.g., 22:14"
+          pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          maxLength={5}
+          placeholder="22:14"
         />
+        {whatsappErr && <p className="mt-2 text-[12px] text-rejected">{whatsappErr}</p>}
       </div>
 
       <FieldError>{error}</FieldError>

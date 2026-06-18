@@ -5,7 +5,8 @@ import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
 import { BackButton } from "@/components/BackButton";
-import { fmtHours, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 
 export const dynamic = "force-dynamic";
 
@@ -45,9 +46,8 @@ export default async function SubmissionDetailPage({ params }: { params: Promise
         <BackButton href="/you" />
         <div className="mt-3">
           <Eyebrow>day {sub.challenge_day}</Eyebrow>
-          <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">
-            {fmtHours(sub.hours_credited ?? sub.hours_claimed)}{" "}
-            <span className="text-[18px] text-tertiary">hours</span>
+          <h1 className="mt-2 font-serif text-[36px] italic leading-none text-primary">
+            {formatHM(sub.hours_credited ?? sub.hours_claimed, "long")}
           </h1>
           <p className="mt-2 font-mono text-[12px] text-tertiary">
             {sub.status} · {timeAgo(sub.submitted_at)}

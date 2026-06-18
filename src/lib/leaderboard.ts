@@ -76,7 +76,7 @@ export async function getLeaderboard(
   const lastIn = active[prizeLine - 1];
   const firstOut = active[prizeLine];
   if (lastIn && firstOut) {
-    hrsToCross = Math.max(0, Math.round((lastIn.total_hours - firstOut.total_hours) * 10) / 10);
+    hrsToCross = Math.max(0, Math.round((lastIn.total_hours - firstOut.total_hours) * 100) / 100);
   }
 
   return {
@@ -84,7 +84,7 @@ export async function getLeaderboard(
     prizeLine,
     activeCount: active.length,
     disqualifiedCount,
-    totalVerifiedHours: Math.round(totalVerifiedHours * 10) / 10,
+    totalVerifiedHours: Math.round(totalVerifiedHours * 100) / 100,
     hrsToCross,
     updatedLabel: "moments ago",
   };

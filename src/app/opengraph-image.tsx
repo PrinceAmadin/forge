@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
-import { toRoman, toRomanUpper, fmtHours } from "@/lib/format";
+import { toRoman, toRomanUpper } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 
 // Edge runtime: @vercel/og loads its WASM/font assets via fetch here, which
 // avoids the Node fileURLToPath resolver that fails under `next dev` on Windows.
@@ -80,7 +81,7 @@ export default async function Og() {
               <div key={p.label} style={{ display: "flex", alignItems: "baseline", gap: 28 }}>
                 <span style={{ fontSize: 44, fontStyle: "italic", color: "#F59E0B", width: 80 }}>{p.label}</span>
                 <span style={{ fontSize: 40, color: "#FAFAFA", flex: 1 }}>{p.name}</span>
-                <span style={{ fontSize: 38, color: "#A1A1AA", fontFamily: "monospace" }}>{fmtHours(p.hours)}h</span>
+                <span style={{ fontSize: 38, color: "#A1A1AA", fontFamily: "monospace" }}>{formatHM(p.hours, "compact")}</span>
               </div>
             ))
           ) : (

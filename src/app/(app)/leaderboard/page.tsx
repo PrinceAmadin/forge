@@ -4,6 +4,7 @@ import { getUser, getProfile, getActiveChallenge } from "@/lib/auth";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 import { Eyebrow, Page, PrimaryButton } from "@/components/ui";
 import { CampaignStrip, progressStates } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
@@ -78,7 +79,7 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
       <footer className="mt-3 border-t border-[#27272a] pt-6">
         <div className="flex items-center justify-between gap-4">
           <p className="font-mono text-[11px] text-tertiary" style={{ letterSpacing: "0.06em" }}>
-            {data.activeCount} readers · {data.totalVerifiedHours} verified hours
+            {data.activeCount} readers · {formatHM(data.totalVerifiedHours, "long")} verified
             {data.disqualifiedCount > 0 ? ` · ${data.disqualifiedCount} disqualified` : ""}
           </p>
           <span className="font-mono text-[11px] text-accent">view all →</span>

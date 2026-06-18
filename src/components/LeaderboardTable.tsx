@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { RankedRow } from "@/lib/types";
-import { toRomanUpper, padRank, fmtHours, timeAgo, deltaGlyph } from "@/lib/format";
+import { toRomanUpper, padRank, timeAgo, deltaGlyph } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 
 type Zone = "top3" | "prize" | "dimmed" | "dq";
 
@@ -104,7 +105,7 @@ function Row({ row, prizeLine }: { row: RankedRow; prizeLine: number }) {
         {row.verified_days}
       </Cell>
       <Cell align="right" className={`${padY} align-middle font-mono tnum ${hoursCls}`}>
-        {fmtHours(row.total_hours)}
+        {formatHM(row.total_hours, "compact")}
       </Cell>
       <Cell align="right" className={`hidden ${padY} pr-3 align-middle font-mono text-[11px] md:table-cell ${lastCls}`}>
         {timeAgo(row.last_submission)}
@@ -127,7 +128,7 @@ function TheCut({ hrsToCross }: { hrsToCross: number | null }) {
           <span className="h-px flex-1 bg-[#27272a]" />
           {hrsToCross != null && (
             <span className="font-mono text-[11px] text-tertiary">
-              {fmtHours(hrsToCross)} hrs to cross
+              {formatHM(hrsToCross, "long")} to cross
             </span>
           )}
         </div>

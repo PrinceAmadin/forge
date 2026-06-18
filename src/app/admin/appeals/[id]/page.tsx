@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
 import { BackButton } from "@/components/BackButton";
-import { fmtHours } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 import { ResolveButtons } from "./resolve-buttons";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +55,7 @@ export default async function AppealDetailPage({ params }: { params: Promise<{ i
             {prof?.full_name ?? "Unknown"} · Day {sub.challenge_day}
           </h1>
           <p className="mt-2 font-mono text-[12px] text-tertiary">
-            claimed {fmtHours(sub.hours_claimed)}h · appeal {appeal.status}
+            claimed {formatHM(sub.hours_claimed, "long")} · appeal {appeal.status}
           </p>
         </div>
 

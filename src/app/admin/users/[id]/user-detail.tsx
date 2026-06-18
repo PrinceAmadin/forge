@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eyebrow, PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
-import { fmtHours } from "@/lib/format";
+import { formatHM, hmToDecimalHours } from "@/lib/time/format";
 import type { Role } from "@/lib/types";
 import { setUserRole, addManualEntry, removeManualEntry } from "../actions";
 
@@ -43,7 +43,8 @@ export function UserDetail({
   const [roleSaved, setRoleSaved] = useState(false);
 
   const [day, setDay] = useState("");
-  const [hours, setHours] = useState("");
+  const [hrs, setHrs] = useState("");
+  const [mins, setMins] = useState("");
   const [reason, setReason] = useState("");
   const [manErr, setManErr] = useState<string>();
   const [manBusy, setManBusy] = useState(false);
@@ -62,12 +63,15 @@ export function UserDetail({
   async function submitManual(e: React.FormEvent) {
     e.preventDefault();
     setManErr(undefined);
+    const decimal = hmToDecimalHours(Number(hrs || 0), Number(mins || 0));
+    if (decimal <= 0) return setManErr("Enter hours and/or minutes.");
     setManBusy(true);
-    const res = await addManualEntry(userId, Number(day), Number(hours), reason);
+    const res = await addManualEntry(userId, Number(day), decimal, reason);
     setManBusy(false);
     if (!res.ok) return setManErr(res.error);
     setDay("");
-    setHours("");
+    setHrs("");
+    setMins("");
     setReason("");
     router.refresh();
   }
@@ -123,13 +127,17 @@ export function UserDetail({
         <Eyebrow>manual entries</Eyebrow>
         <form onSubmit={submitManual} className="mt-3 flex flex-col gap-3">
           <div className="flex gap-3">
-            <div className="w-20">
+            <div className="w-16">
               <Label htmlFor="day">Day</Label>
-              <TextInput id="day" value={day} onChange={(e) => setDay(e.target.value)} inputMode="numeric" placeholder="1" />
+              <TextInput id="day" value={day} onChange={(e) => setDay(e.target.value.replace(/[^\d]/g, ""))} inputMode="numeric" placeholder="1" />
             </div>
-            <div className="w-24">
+            <div className="w-20">
               <Label htmlFor="mhours">Hours</Label>
-              <TextInput id="mhours" value={hours} onChange={(e) => setHours(e.target.value)} inputMode="decimal" placeholder="8" />
+              <TextInput id="mhours" value={hrs} onChange={(e) => setHrs(e.target.value.replace(/[^\d]/g, "").slice(0, 2))} inputMode="numeric" placeholder="8" />
+            </div>
+            <div className="w-20">
+              <Label htmlFor="mmins">Minutes</Label>
+              <TextInput id="mmins" value={mins} onChange={(e) => setMins(e.target.value.replace(/[^\d]/g, "").slice(0, 2))} inputMode="numeric" placeholder="0" />
             </div>
           </div>
           <div>
@@ -142,7 +150,7 @@ export function UserDetail({
             />
           </div>
           <FieldError>{manErr}</FieldError>
-          <PrimaryButton type="submit" disabled={manBusy || !day || !hours || !reason.trim()} className="h-11 w-auto px-5">
+          <PrimaryButton type="submit" disabled={manBusy || !day || (!hrs && !mins) || !reason.trim()} className="h-11 w-auto px-5">
             {manBusy ? "Adding…" : "Add manual entry"}
           </PrimaryButton>
         </form>
@@ -153,7 +161,7 @@ export function UserDetail({
               <li key={m.id} className="flex items-start justify-between gap-4 border-t border-[#27272a] py-3">
                 <span className="min-w-0">
                   <span className="text-[13px] text-primary">
-                    Day {m.challenge_day} · {fmtHours(m.hours_credited ?? m.hours_claimed)}h
+                    Day {m.challenge_day} · {formatHM(m.hours_credited ?? m.hours_claimed, "compact")}
                   </span>
                   <span className="mt-0.5 block truncate text-[12px] italic text-tertiary">
                     {m.topic.replace(/^Manual entry — /, "")}
@@ -180,7 +188,7 @@ export function UserDetail({
                 <span className="text-[13px] text-primary">Day {s.challenge_day}</span>
                 <span className="flex items-center gap-3">
                   <span className="font-mono text-[13px] tnum text-secondary">
-                    {fmtHours(s.hours_credited ?? s.hours_claimed)}h
+                    {formatHM(s.hours_credited ?? s.hours_claimed, "compact")}
                   </span>
                   <span
                     className={`text-[11px] lowercase ${

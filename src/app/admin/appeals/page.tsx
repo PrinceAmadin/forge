@@ -3,7 +3,8 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
 import { BackButton } from "@/components/BackButton";
-import { fmtHours, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default async function AdminAppealsPage() {
                       {a.submissions ? nameById.get(a.submissions.participant_id) ?? "Unknown" : "Unknown"}
                     </span>
                     <span className="block font-mono text-[11px] text-tertiary">
-                      Day {a.submissions?.challenge_day} · {fmtHours(a.submissions?.hours_claimed ?? 0)}h · {timeAgo(a.created_at)}
+                      Day {a.submissions?.challenge_day} · {formatHM(a.submissions?.hours_claimed ?? 0, "compact")} · {timeAgo(a.created_at)}
                     </span>
                   </span>
                   <span className="shrink-0 font-mono text-[11px] text-accent">review →</span>

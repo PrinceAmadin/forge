@@ -3,7 +3,7 @@ import { requireOnboardedViewer, getActiveChallenge, getUser } from "@/lib/auth"
 import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay, submittableDay } from "@/lib/challenge";
-import { fmtHours } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 import { Eyebrow, Page } from "@/components/ui";
 import { CampaignStrip, type CellState } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
@@ -104,7 +104,7 @@ export default async function YouPage({
         {/* Hero number. §6.2 */}
         <div className="mt-8">
           <p className="font-serif text-[64px] italic leading-none text-primary sm:text-[128px]">
-            {fmtHours(totalHours)}
+            {formatHM(totalHours, "compact")}
           </p>
           <p className="mt-2 text-[12px] lowercase text-tertiary" style={{ letterSpacing: "0.18em" }}>
             hours
@@ -116,10 +116,10 @@ export default async function YouPage({
           {me?.rank === 1 ? (
             <p className="font-serif text-[18px] italic text-primary">Leading the field.</p>
           ) : (
-            <RivalryRow label="chasing" name={ahead?.full_name} value={aheadGap != null ? `+${fmtHours(aheadGap)} ahead` : null} accent />
+            <RivalryRow label="chasing" name={ahead?.full_name} value={aheadGap != null ? `+${formatHM(aheadGap, "long")} ahead` : null} accent />
           )}
           {behind ? (
-            <RivalryRow label="chased by" name={behind.full_name} value={behindGap != null ? `−${fmtHours(behindGap)} behind` : null} />
+            <RivalryRow label="chased by" name={behind.full_name} value={behindGap != null ? `−${formatHM(behindGap, "long")} behind` : null} />
           ) : (
             <p className="text-[13px] text-tertiary">No one chasing you yet.</p>
           )}
@@ -134,8 +134,8 @@ export default async function YouPage({
             {cutGap == null
               ? "—"
               : aboveCut
-                ? `${fmtHours(cutGap)} hrs above the cut`
-                : `${fmtHours(cutGap)} hrs below the cut`}
+                ? `${formatHM(cutGap, "long")} above the cut`
+                : `${formatHM(cutGap, "long")} below the cut`}
           </p>
         </div>
 
@@ -158,7 +158,7 @@ export default async function YouPage({
                       <div className="flex items-baseline justify-between gap-4">
                         <span className="text-[14px] text-primary">Day {s.challenge_day}</span>
                         <span className={`font-mono text-[13px] tnum ${statusColor(s.status)}`}>
-                          {fmtHours(s.hours_credited ?? s.hours_claimed)}
+                          {formatHM(s.hours_credited ?? s.hours_claimed, "compact")}
                         </span>
                       </div>
                       <p className={`mt-1 font-serif text-[11px] italic ${statusColor(s.status)}`}>

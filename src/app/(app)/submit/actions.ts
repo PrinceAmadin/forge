@@ -86,7 +86,8 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
     return { ok: false, error: "The challenge isn't accepting submissions right now." };
   }
 
-  const hours = Math.round(input.hoursClaimed * 10) / 10;
+  // Round to 2 decimals so minute precision (e.g. 7.75 = 7h45m) survives. §ISSUE-3
+  const hours = Math.round(input.hoursClaimed * 100) / 100;
   if (!(hours > 0 && hours <= 24)) return { ok: false, error: "Hours must be between 0.1 and 24." };
   const topic = input.topic.trim().slice(0, 120);
   if (!topic) return { ok: false, error: "Tell us what you studied." };
@@ -157,9 +158,9 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
     const firstOut = board.rows.find((r) => !r.is_disqualified && r.rank === board.prizeLine + 1);
     aboveCut = me.rank <= board.prizeLine;
     if (aboveCut && firstOut) {
-      hrsFromCut = Math.round((me.total_hours - firstOut.total_hours) * 10) / 10;
+      hrsFromCut = Math.round((me.total_hours - firstOut.total_hours) * 100) / 100;
     } else if (!aboveCut && lastIn) {
-      hrsFromCut = Math.round((lastIn.total_hours - me.total_hours) * 10) / 10;
+      hrsFromCut = Math.round((lastIn.total_hours - me.total_hours) * 100) / 100;
     }
   }
 

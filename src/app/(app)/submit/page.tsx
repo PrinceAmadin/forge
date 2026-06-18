@@ -5,6 +5,7 @@ import { submittableDay, formatLagosDate } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
 import { Eyebrow, PrimaryButton } from "@/components/ui";
 import { SettingsCog } from "@/components/SettingsCog";
+import { formatHM } from "@/lib/time/format";
 import { SubmitForm } from "./submit-form";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export default async function SubmitPage() {
         <Eyebrow>submit</Eyebrow>
         <p className="font-serif text-[36px] leading-none text-primary">Day {day}</p>
         <p className="text-[14px] text-secondary">
-          You&rsquo;ve logged today — {existing.hours_claimed} hours,{" "}
+          You&rsquo;ve logged today — {formatHM(Number(existing.hours_claimed), "long")},{" "}
           {existing.status === "pending"
             ? "awaiting verification"
             : existing.status === "confirmed"

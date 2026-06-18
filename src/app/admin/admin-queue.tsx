@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { reviewSubmission, updateNotes, disqualifyParticipant } from "./actions";
-import { fmtHours, timeAgo } from "@/lib/format";
+import { timeAgo } from "@/lib/format";
+import { formatHM } from "@/lib/time/format";
 
 export interface QueueItem {
   id: string;
@@ -149,7 +150,7 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="truncate text-[14px] text-primary">{it.fullName}</span>
-                  <span className="font-mono text-[13px] tnum text-secondary">{fmtHours(it.hoursClaimed)}</span>
+                  <span className="font-mono text-[13px] tnum text-secondary">{formatHM(it.hoursClaimed, "compact")}</span>
                 </div>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="font-mono text-[11px] text-tertiary">Day {it.day} · {timeAgo(it.submittedAt)}</span>
@@ -202,13 +203,20 @@ export function AdminQueue({ items: initial, challengeId }: { items: QueueItem[]
           <div className="mt-6 flex items-baseline gap-6">
             <div>
               <p className="text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.18em" }}>claimed</p>
-              <p className="font-mono text-[28px] text-primary">{fmtHours(current.hoursClaimed)}</p>
+              <p className="font-serif text-[28px] italic text-primary">{formatHM(current.hoursClaimed, "long")}</p>
             </div>
             {current.ocrHours != null && (
               <div>
-                <p className="text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.18em" }}>ocr</p>
-                <p className={`font-mono text-[18px] ${Math.abs(current.ocrHours - current.hoursClaimed) > 0.5 ? "text-accent" : "text-secondary"}`}>
-                  {fmtHours(current.ocrHours)}
+                <p className="text-[10px] lowercase text-tertiary" style={{ letterSpacing: "0.18em" }}>ocr detected</p>
+                <p className={`font-serif text-[20px] italic ${Math.abs(current.ocrHours - current.hoursClaimed) > 0.5 ? "text-accent" : "text-secondary"}`}>
+                  {formatHM(current.ocrHours, "long")}
+                  {Math.abs(current.ocrHours - current.hoursClaimed) >= 0.0167 && (
+                    <span className="ml-2 font-mono text-[12px]">
+                      {current.ocrHours > current.hoursClaimed ? "+" : "−"}
+                      {formatHM(Math.abs(current.ocrHours - current.hoursClaimed), "compact")}{" "}
+                      {current.ocrHours > current.hoursClaimed ? "over" : "under"}
+                    </span>
+                  )}
                 </p>
               </div>
             )}
