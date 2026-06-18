@@ -72,48 +72,77 @@ export async function addManualEntry(
   return { ok: true };
 }
 
+// Coerce any thrown/returned error shape into a useful string. Supabase/Postgres
+// errors are plain objects ({ message, code, details, hint }) that JSON.stringify
+// to "{}" in a React child — hence the silent empty-error bug. §admin-delete
+function describeError(e: unknown): string {
+  if (e && typeof e === "object") {
+    const err = e as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+    if (typeof err.message === "string" && err.message.trim()) return err.message;
+    if (err.code != null && String(err.code).trim()) {
+      const details =
+        typeof err.details === "string" && err.details.trim()
+          ? err.details
+          : typeof err.hint === "string" && err.hint.trim()
+            ? err.hint
+            : "see server logs";
+      return `Database error [${String(err.code)}]: ${details}`;
+    }
+  }
+  if (typeof e === "string" && e.trim()) return e;
+  return "Deletion failed — check server logs";
+}
+
 // Permanent account deletion (super_admin only). Deletes the auth.users row via
 // the service-role client, which cascades to profiles and downstream per the
-// 0011 FK rules. Audited with the deleted user's identity denormalized so the
-// record survives the row going away. §admin-delete
+// 0011/0012 FK rules. Audited with the deleted user's identity denormalized so
+// the record survives the row going away. §admin-delete
+//
+// requireSuperAdmin() (may redirect) and the success redirect() both throw
+// control-flow signals, so they stay OUTSIDE the try/catch. Everything that can
+// fail with a real error returns a string via describeError — never throws.
 export async function deleteUser(targetId: string): Promise<AdminResult> {
   const me = await requireSuperAdmin();
   if (targetId === me.id) {
     return { ok: false, error: "You can't delete your own account." };
   }
 
-  const supabase = await createClient();
-  const { data: target } = await supabase
-    .from("profiles")
-    .select("full_name, role")
-    .eq("id", targetId)
-    .single();
-  if (!target) return { ok: false, error: "User not found." };
-
-  let email: string | null = null;
   try {
+    const supabase = await createClient();
+    const { data: target, error: tErr } = await supabase
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", targetId)
+      .single();
+    if (tErr) return { ok: false, error: describeError(tErr) };
+    if (!target) return { ok: false, error: "User not found." };
+
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return { ok: false, error: "Deletion failed — SUPABASE_SERVICE_ROLE_KEY is not set on the server." };
+    }
+
     const admin = createAdminClient();
     const { data: authUser } = await admin.auth.admin.getUserById(targetId);
-    email = authUser?.user?.email ?? null;
+    const email = authUser?.user?.email ?? null;
+
     const { error: delErr } = await admin.auth.admin.deleteUser(targetId);
-    if (delErr) return { ok: false, error: delErr.message };
+    if (delErr) return { ok: false, error: describeError(delErr) };
+
+    // Denormalize the deleted user into the audit record (no profile row remains).
+    await supabase.rpc("write_audit", {
+      p_action: "user.delete",
+      p_entity_type: "profile",
+      p_entity_id: targetId,
+      p_previous: { full_name: target.full_name, email, role: target.role },
+      p_new: null,
+    });
+
+    revalidatePath("/admin/users");
+    revalidatePath("/leaderboard");
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Deletion failed." };
+    return { ok: false, error: describeError(e) };
   }
 
-  // Denormalize the deleted user into the audit record (no profile row remains).
-  await supabase.rpc("write_audit", {
-    p_action: "user.delete",
-    p_entity_type: "profile",
-    p_entity_id: targetId,
-    p_previous: { full_name: target.full_name, email, role: target.role },
-    p_new: null,
-  });
-
-  revalidatePath("/admin/users");
-  revalidatePath("/leaderboard");
-  // redirect() must stay outside the try above — it signals via a thrown
-  // NEXT_REDIRECT that the catch would otherwise swallow.
   redirect("/admin/users?deleted=1");
 }
 
