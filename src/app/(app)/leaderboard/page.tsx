@@ -12,6 +12,7 @@ import { SettingsCog } from "@/components/SettingsCog";
 import { Wordmark } from "@/components/nav/Wordmark";
 import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { RefreshOnFocus } from "@/components/RefreshOnFocus";
+import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import Link from "next/link";
 
 export const revalidate = 30;
@@ -27,6 +28,10 @@ export default async function LeaderboardPage() {
   return (
     <Page className="pt-10">
       <RefreshOnFocus />
+      {/* Live updates: refresh when hours change (a submission is confirmed) or
+          a new reader enrolls. §realtime */}
+      <RealtimeRefresh table="submissions" event="UPDATE" filter="status=eq.confirmed" />
+      <RealtimeRefresh table="challenge_participants" event="INSERT" />
       {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
       <div className="mb-3 flex justify-end sm:hidden">
         <Wordmark />

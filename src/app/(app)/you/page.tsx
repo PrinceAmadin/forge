@@ -10,6 +10,7 @@ import { Eyebrow, Page } from "@/components/ui";
 import { CampaignStrip, type CellState } from "@/components/CampaignStrip";
 import { SettingsCog } from "@/components/SettingsCog";
 import { Wordmark } from "@/components/nav/Wordmark";
+import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import { YourMarks, type YourMarkRow } from "./your-marks";
 import type { Submission } from "@/lib/types";
 
@@ -125,6 +126,10 @@ export default async function YouPage({
 
   return (
     <Page className="pt-10">
+      {/* Live updates: my own submission status changing, or any confirmed
+          submission that could shift my rank/rivalry block. §realtime */}
+      <RealtimeRefresh table="submissions" filter={`participant_id=eq.${user!.id}`} />
+      <RealtimeRefresh table="submissions" event="UPDATE" filter="status=eq.confirmed" />
       <div className="pb-28 sm:pb-10">
         {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
         <div className="mb-3 flex justify-end sm:hidden">

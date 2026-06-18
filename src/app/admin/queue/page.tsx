@@ -1,5 +1,6 @@
 import { requireAdmin, getActiveChallenge } from "@/lib/auth";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import { AdminQueue, type QueueItem } from "../admin-queue";
 
 export const dynamic = "force-dynamic";
@@ -91,5 +92,13 @@ export default async function AdminQueuePage() {
 
   items.sort((a, b) => Number(b.flags.length > 0) - Number(a.flags.length > 0));
 
-  return <AdminQueue items={items} challengeId={challenge.id} />;
+  return (
+    <>
+      {/* Live updates: a new pending submission arrives, or one flips back to
+          pending (e.g. via an upheld appeal). §realtime */}
+      <RealtimeRefresh table="submissions" event="INSERT" filter="status=eq.pending" />
+      <RealtimeRefresh table="submissions" event="UPDATE" filter="status=eq.pending" />
+      <AdminQueue items={items} challengeId={challenge.id} />
+    </>
+  );
 }
