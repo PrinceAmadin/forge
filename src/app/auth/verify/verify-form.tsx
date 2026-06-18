@@ -11,7 +11,8 @@ export function VerifyForm() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
-  const next = params.get("next") ?? "/leaderboard";
+  const rawNext = params.get("next");
+  const next = rawNext ?? "/leaderboard";
 
   const [digits, setDigits] = useState<string[]>(Array(LEN).fill(""));
   const [error, setError] = useState<string>();
@@ -34,13 +35,17 @@ export function VerifyForm() {
     setPending(true);
     const supabase = createClient();
     const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-    setPending(false);
     if (error) {
-      setError("That code didn't match. Check it and try again.");
+      // Surface the real Supabase reason (wrong code, expired, rate-limited…)
+      // and re-enable the inputs for another try.
+      setPending(false);
+      setError(error.message);
       setDigits(Array(LEN).fill(""));
       inputs.current[0]?.focus();
       return;
     }
+    // Success: keep the "Verifying…" state up through navigation — don't clear
+    // pending, or the inputs flash back to active for a frame before redirect.
     // Session cookies are written by the client; the destination's middleware /
     // page routes to /welcome or /exam-flame as needed.
     router.replace(next);
@@ -113,27 +118,28 @@ export function VerifyForm() {
             maxLength={LEN}
             aria-label={`Digit ${i + 1}`}
             autoFocus={i === 0}
-            className="h-14 w-10 rounded-md border border-[#27272a] bg-[#09090b] text-center font-mono text-[22px] text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-amber-500/20"
+            disabled={pending}
+            className="h-14 w-10 rounded-md border border-[#27272a] bg-[#09090b] text-center font-mono text-[22px] text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-amber-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
           />
         ))}
       </div>
 
       <div className="mt-4 text-center">
         <FieldError>{error}</FieldError>
-        {pending && <p className="text-[13px] text-tertiary">Verifying…</p>}
+        {pending && <p className="text-[14px] text-secondary">Verifying…</p>}
       </div>
 
       <div className="mt-8 flex flex-col items-center gap-3">
         <button
           onClick={resend}
           disabled={cooldown > 0}
-          className="text-[13px] text-accent disabled:text-tertiary"
+          className="text-[14px] text-accent disabled:text-tertiary"
         >
           {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
         </button>
         <button
-          onClick={() => router.replace("/auth")}
-          className="text-[13px] text-tertiary"
+          onClick={() => router.push(rawNext ? `/auth?next=${encodeURIComponent(rawNext)}` : "/auth")}
+          className="text-[14px] text-accent"
         >
           Use a different email
         </button>
