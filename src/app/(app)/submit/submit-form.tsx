@@ -175,11 +175,12 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
       {/* Screenshot dropzone. §6.3 */}
       <div>
         <Label>Timer screenshot</Label>
+        {/* No `capture`: lets mobile offer Photo Library + Take Photo + Files,
+            so users can upload an existing screenshot. §FIX-1 */}
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={onPick}
           className="sr-only"
           id="screenshot"
@@ -221,13 +222,11 @@ export function SubmitForm({ day, userId: _userId }: { day: number; userId: stri
 
       <FieldError>{error}</FieldError>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#27272a] bg-bg px-5 py-3 pb-safe sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-        <div className="mx-auto max-w-[480px]">
-          <PrimaryButton type="submit" disabled={!canSubmit} className="h-14 text-[16px]">
-            {pending ? "Submitting…" : "Submit for verification"}
-          </PrimaryButton>
-        </div>
-      </div>
+      {/* In-flow (not fixed): the layout's bottom padding keeps it clear of the
+          tab bar, so it never hides behind the nav on mobile. §FIX-2 */}
+      <PrimaryButton type="submit" disabled={!canSubmit} className="h-14 text-[16px]">
+        {pending ? "Submitting…" : "Submit for verification"}
+      </PrimaryButton>
     </form>
   );
 }

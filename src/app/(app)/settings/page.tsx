@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser, getProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
+import { BackButton } from "@/components/BackButton";
 import { signOut } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,10 @@ export default async function SettingsPage() {
 
   return (
     <Page className="pt-10">
-      <div className="max-w-[480px] pb-28 sm:pb-10">
+      <div className="max-w-[480px]">
+        <div className="mb-4">
+          <BackButton />
+        </div>
         <Eyebrow>settings</Eyebrow>
         <h1 className="mt-3 text-[22px] font-medium text-primary">{profile.full_name}</h1>
         <p className="mt-1 text-[13px] text-secondary">
@@ -41,12 +45,19 @@ export default async function SettingsPage() {
               <Link href="/admin/queue" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
                 Review queue
               </Link>
+              <Link href="/admin/appeals" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
+                Review appeals
+              </Link>
               {isSuper && (
                 <Link href="/admin/challenges" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
                   Manage challenges
                 </Link>
               )}
-              {isSuper && <ComingSoonRow label="User management" />}
+              {isSuper && (
+                <Link href="/admin/users" className={`${rowClass} text-primary active:text-secondary sm:hover:text-secondary`}>
+                  User management
+                </Link>
+              )}
               {isSuper && <ComingSoonRow label="Audit log" />}
             </div>
           </section>

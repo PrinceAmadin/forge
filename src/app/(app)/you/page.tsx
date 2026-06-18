@@ -18,8 +18,13 @@ function statusColor(s: string): string {
   return s === "confirmed" ? "text-primary" : s === "rejected" ? "text-rejected" : "text-accent";
 }
 
-export default async function YouPage() {
+export default async function YouPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ appealed?: string }>;
+}) {
   const profile = await requireOnboardedViewer();
+  const { appealed } = await searchParams;
   const [challenge, user] = await Promise.all([getActiveChallenge(), getUser()]);
   const supabase = await createClient();
 
@@ -90,6 +95,12 @@ export default async function YouPage() {
           <SettingsCog className="-mr-2.5 -mt-2" />
         </div>
 
+        {appealed && (
+          <p className="mt-6 rounded-md border border-[#27272a] px-4 py-3 text-[13px] text-secondary">
+            Appeal submitted. The team will review it.
+          </p>
+        )}
+
         {/* Hero number. §6.2 */}
         <div className="mt-8">
           <p className="font-serif text-[64px] italic leading-none text-primary sm:text-[128px]">
@@ -139,23 +150,31 @@ export default async function YouPage() {
             <p className="text-[14px] text-tertiary">The race hasn&rsquo;t started for you yet.</p>
           ) : (
             <ul>
-              {subs.map((s) => (
-                <li key={s.id} className="border-t border-[#27272a] py-4">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-[14px] text-primary">Day {s.challenge_day}</span>
-                    <span className={`font-mono text-[13px] tnum ${statusColor(s.status)}`}>
-                      {fmtHours(s.hours_credited ?? s.hours_claimed)}
-                    </span>
-                  </div>
-                  <p className={`mt-1 font-serif text-[11px] italic ${statusColor(s.status)}`}>
-                    {statusLabel(s.status)}
-                  </p>
-                  <p className="mt-1 truncate text-[12px] text-secondary">{s.topic}</p>
-                  {s.status === "rejected" && s.rejection_reason && (
-                    <p className="mt-1 text-[12px] text-rejected">{s.rejection_reason}</p>
-                  )}
-                </li>
-              ))}
+              {subs.map((s) => {
+                const isManual = s.topic.startsWith("Manual entry");
+                return (
+                  <li key={s.id} className="border-t border-[#27272a]">
+                    <Link href={`/submissions/${s.id}`} className="block py-4 transition-colors active:bg-zinc-900/40 sm:hover:bg-zinc-900/40">
+                      <div className="flex items-baseline justify-between gap-4">
+                        <span className="text-[14px] text-primary">Day {s.challenge_day}</span>
+                        <span className={`font-mono text-[13px] tnum ${statusColor(s.status)}`}>
+                          {fmtHours(s.hours_credited ?? s.hours_claimed)}
+                        </span>
+                      </div>
+                      <p className={`mt-1 font-serif text-[11px] italic ${statusColor(s.status)}`}>
+                        {statusLabel(s.status)}
+                      </p>
+                      {/* Manual credits are shown transparently. §FIX-5 */}
+                      <p className={`mt-1 truncate text-[12px] ${isManual ? "italic text-tertiary" : "text-secondary"}`}>
+                        {isManual ? "Manual entry" : s.topic}
+                      </p>
+                      {s.status === "rejected" && s.rejection_reason && (
+                        <p className="mt-1 text-[12px] text-rejected">{s.rejection_reason}</p>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

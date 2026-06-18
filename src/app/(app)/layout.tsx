@@ -6,7 +6,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SideRail />
-      <main className="min-h-dvh pb-20 sm:pb-0 sm:pl-[200px]">{children}</main>
+      {/* Bottom padding clears the fixed 64px tab bar + safe-area inset on
+          mobile so no page's content (esp. the submit button) hides behind the
+          nav. Desktop uses the side rail, so it only needs normal spacing. §FIX-2 */}
+      <main className="min-h-dvh pb-[calc(80px+env(safe-area-inset-bottom))] sm:pb-10 sm:pl-[200px]">
+        {children}
+      </main>
       <TabBar />
     </>
   );
