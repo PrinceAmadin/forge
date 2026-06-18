@@ -84,11 +84,15 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
     );
   }
 
+  // Keep the default board scannable: top prize-line + a few below the cut.
+  // The full register lives at /leaderboard/all.
+  const visibleRows = data.rows.slice(0, data.prizeLine + 5);
+
   return (
     <>
       <div className="mt-2">
         <LeaderboardTable
-          rows={data.rows}
+          rows={visibleRows}
           prizeLine={data.prizeLine}
           marksAgainst={marks?.againstCount}
           overtakes={marks?.recentOvertakes}
@@ -101,7 +105,9 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
             {data.activeCount} readers · {formatHM(data.totalVerifiedHours, "long")} verified
             {data.disqualifiedCount > 0 ? ` · ${data.disqualifiedCount} disqualified` : ""}
           </p>
-          <span className="font-mono text-[11px] text-accent">view all →</span>
+          <Link href="/leaderboard/all" className="shrink-0 font-mono text-[11px] text-accent">
+            view all →
+          </Link>
         </div>
       </footer>
     </>

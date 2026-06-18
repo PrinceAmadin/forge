@@ -5,6 +5,15 @@ import { formatHM } from "@/lib/time/format";
 
 type Zone = "top3" | "prize" | "dimmed" | "dq";
 
+// Long course names blow out the single mobile metadata line. Collapse a long
+// multi-word course to its first word ("Mechanical Engineering" → "Mechanical");
+// the metadata line is also CSS-truncated, so single long words still ellipsize.
+function shortCourse(course: string): string {
+  const c = (course ?? "").trim();
+  if (c.length <= 16) return c;
+  return c.split(/\s+/)[0] ?? c;
+}
+
 function zoneOf(row: RankedRow, prizeLine: number): Zone {
   if (row.is_disqualified) return "dq";
   if (row.rank <= 3) return "top3";
@@ -77,7 +86,7 @@ function Row({
     "transition-colors sm:hover:bg-zinc-900/40",
   ].join(" ");
 
-  const padY = zone === "top3" ? "py-5" : "py-3.5";
+  const padY = zone === "top3" ? "py-4" : "py-3.5";
   const rank = zone === "top3" ? toRomanUpper(row.rank) : padRank(row.rank);
 
   return (
@@ -89,32 +98,42 @@ function Row({
         {deltaGlyph(row.delta, row.isNew)}
       </Cell>
       <Cell className={`${padY} pl-3 align-middle`}>
-        <div className="flex items-baseline gap-2">
-          <Link
-            href={`/readers/${row.participant_id}`}
-            className={`text-[14px] ${nameCls} ${row.isYou ? "font-medium" : "font-normal"} transition-colors active:text-accent sm:hover:text-accent`}
-          >
-            {row.full_name}
-          </Link>
-          {row.isYou && (
-            <span className="font-serif text-[12px] italic text-accent" aria-label="your row">
-              you
-            </span>
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <Link
+              href={`/readers/${row.participant_id}`}
+              className={`line-clamp-2 break-words text-[15px] leading-[1.25] md:text-[14px] ${nameCls} ${row.isYou ? "font-medium" : "font-normal"} transition-colors active:text-accent sm:hover:text-accent`}
+            >
+              {row.full_name}
+            </Link>
+            {row.isYou && (
+              <span className="shrink-0 font-serif text-[12px] italic text-accent" aria-label="your row">
+                you
+              </span>
+            )}
+            {zone === "dq" && (
+              <span className="shrink-0 font-serif text-[12px] italic text-rejected">disqualified</span>
+            )}
+          </div>
+          {/* Desktop: course on its own line under the name. On mobile it folds
+              into the single metadata line below instead. */}
+          <div className={`mt-[3px] hidden truncate text-[12px] md:block ${courseCls}`}>{row.course}</div>
+          {/* Overtake badge — honors the achiever for 24h. §Marks-4 */}
+          {overtookName && (
+            <div className="mt-1 font-serif text-[12px] italic text-accent">↟ overtook {overtookName}</div>
           )}
-          {zone === "dq" && (
-            <span className="font-serif text-[12px] italic text-rejected">disqualified</span>
-          )}
-        </div>
-        <div className={`mt-[3px] truncate text-[12px] ${courseCls}`}>{row.course}</div>
-        {/* Overtake badge — honors the achiever for 24h. §Marks-4 */}
-        {overtookName && (
-          <div className="mt-1 font-serif text-[12px] italic text-accent">↟ overtook {overtookName}</div>
-        )}
-        {/* Mobile-only collapsed metadata. §13.5 */}
-        <div className={`mt-1 font-mono text-[11px] md:hidden ${lastCls}`}>
-          {[row.hall_name, `${row.verified_days}d`, timeAgo(row.last_submission)]
-            .filter(Boolean)
-            .join(" · ")}
+          {/* Mobile-only: course · hall · days · last — one truncated line, no
+              standalone "—" when there's no submission yet. §13.5 */}
+          <div className={`mt-1 truncate font-mono text-[11px] md:hidden ${lastCls}`}>
+            {[
+              shortCourse(row.course),
+              row.hall_name,
+              `${row.verified_days}d`,
+              row.last_submission ? timeAgo(row.last_submission) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
         </div>
       </Cell>
       <Cell className={`hidden ${padY} align-middle text-[13px] md:table-cell ${hallCls}`}>
