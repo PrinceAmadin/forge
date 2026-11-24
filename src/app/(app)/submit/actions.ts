@@ -5,9 +5,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveChallenge } from "@/lib/auth";
 import { submittableDay, dayIsOpen } from "@/lib/challenge";
-
-const BUCKET = "submissions";
-const CHALLENGE_SLUG = "exam-flame";
+import { SUBMISSIONS_BUCKET, submissionStoragePath } from "@/lib/storage";
 
 export interface UploadTarget {
   path: string;
@@ -43,10 +41,10 @@ export async function requestUploadUrl(): Promise<
     .maybeSingle();
   if (existing) return { ok: false, error: "You've already submitted for today." };
 
-  const path = `${CHALLENGE_SLUG}/${user.id}/${day}.jpg`;
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path, {
-    upsert: true,
-  });
+  const path = submissionStoragePath(challenge.slug, user.id, day);
+  const { data, error } = await supabase.storage
+    .from(SUBMISSIONS_BUCKET)
+    .createSignedUploadUrl(path, { upsert: true });
   if (error || !data) return { ok: false, error: "Couldn't start the upload. Try again." };
 
   return { ok: true, target: { path: data.path, token: data.token, day } };
@@ -56,8 +54,6 @@ export interface CreateInput {
   day: number;
   hoursClaimed: number;
   topic: string;
-  storagePath: string;
-  ocrHours?: number | null;
   whatsappTime?: string | null;
 }
 
@@ -75,6 +71,16 @@ export interface SubmitResult {
 // NOT computed here — they were stalling/slowing the submit path. screenshot_phash
 // and ocr_extracted_hours are stored null; admins review the screenshot manually.
 // Duplicate/OCR-mismatch flags are dropped for V1; the cheap flags remain. §critical-path
+//
+// screenshot_path is DERIVED here, never accepted from the caller. This action
+// is independently callable, and it previously wrote whatever storagePath the
+// client sent — so a crafted call could point a submission row at another
+// participant's screenshot, and the reviewer would credit hours against the
+// wrong evidence. Storage RLS stops you *uploading* outside your own folder; it
+// does nothing about a row that merely references someone else's object.
+// The day is still the caller's claim, but it is bounded by dayIsOpen (the
+// documented 48h window, §10) and the path is built from the session user id,
+// so the row can only ever reference the caller's own folder.
 export async function createSubmission(input: CreateInput): Promise<SubmitResult> {
   const supabase = await createClient();
   const {
@@ -115,7 +121,7 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
     challenge_day: input.day,
     hours_claimed: hours,
     topic,
-    screenshot_path: input.storagePath,
+    screenshot_path: submissionStoragePath(challenge.slug, user.id, input.day),
     screenshot_phash: null,
     ocr_extracted_hours: null,
     whatsapp_post_time: input.whatsappTime || null,

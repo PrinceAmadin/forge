@@ -91,7 +91,7 @@ export default async function SubmitPage() {
       </h1>
       <p className="mt-2 text-[13px] text-tertiary">{formatLagosDate(challenge)}</p>
       <div className="mt-8">
-        <SubmitForm day={day} userId={user!.id} />
+        <SubmitForm />
       </div>
     </>
   );

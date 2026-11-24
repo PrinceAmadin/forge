@@ -47,10 +47,9 @@ async function compress(file: File): Promise<Blob> {
   );
 }
 
-// `day` is intentionally unused: the submittable day is minted server-side by
-// requestUploadUrl (see target.target.day below), never taken from the client.
-// Phase 0.4 removes the prop entirely once createSubmission re-derives it too.
-export function SubmitForm({ day: _day, userId: _userId }: { day: number; userId: string }) {
+// Takes no props: the submittable day and the storage path are both minted
+// server-side by requestUploadUrl, and the participant comes from the session.
+export function SubmitForm() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string>();
@@ -135,11 +134,12 @@ export function SubmitForm({ day: _day, userId: _userId }: { day: number; userId
     if (upErr) throw new Error(upErr.message || "The upload didn't go through. Try again.");
 
     setStep("saving");
+    // No storagePath: the action derives it from the session user and the day,
+    // so the client cannot point a submission at someone else's screenshot.
     const result = await createSubmission({
       day: target.target.day,
       hoursClaimed: decimal,
       topic: topic.trim(),
-      storagePath: target.target.path,
       whatsappTime: whatsapp.trim() || null,
     });
     if (!result.ok) throw new Error(result.error || "Couldn't save your submission. Try again.");
