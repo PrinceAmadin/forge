@@ -1,4 +1,4 @@
-import type { Challenge } from "@/lib/types";
+import type { Challenge, PrizeTier, RewardKind } from "@/lib/types";
 
 // All day math is anchored to the challenge timezone (Africa/Lagos), computed
 // server-side. The client never supplies challenge_day. §10
@@ -60,4 +60,96 @@ export function formatDateRange(challenge: Challenge): string {
       new Date(`${d}T00:00:00`)
     );
   return `Starts ${fmt(challenge.start_date)} · Ends ${fmt(challenge.end_date)}`;
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle semantics. Spec §10 defines the state machine
+// draft → active → verification → completed → archived; these predicates are
+// the single place those rules are expressed, so SQL guards, route guards and
+// UI copy cannot drift apart.
+// ---------------------------------------------------------------------------
+
+// Submissions are accepted only while the challenge is active. §10
+export function acceptsSubmissions(challenge: Challenge): boolean {
+  return challenge.status === "active";
+}
+
+// Joining is open while the challenge is active. A draft is visible to a
+// super_admin for preview, but is never joinable.
+export function isJoinable(challenge: Challenge): boolean {
+  return challenge.status === "active";
+}
+
+// The board is public once a challenge is under way and stays readable after
+// it ends — results are the point. §10
+export function isBoardPublic(challenge: Challenge): boolean {
+  return (
+    challenge.status === "active" ||
+    challenge.status === "verification" ||
+    challenge.status === "completed"
+  );
+}
+
+// After archiving, everything is frozen. §10
+export function isReadOnly(challenge: Challenge): boolean {
+  return challenge.status === "archived";
+}
+
+// ---------------------------------------------------------------------------
+// Rewards. Not every challenge pays money: a friendly one has no reward at
+// all, and a custom one describes it in words.
+// ---------------------------------------------------------------------------
+
+// Rows created before the reward columns existed are all cash challenges.
+export function rewardKind(challenge: Challenge): RewardKind {
+  return challenge.reward_kind ?? "cash";
+}
+
+export function paysCash(challenge: Challenge): boolean {
+  return rewardKind(challenge) === "cash";
+}
+
+// How many winners a tier covers: one position, or an inclusive range.
+export function tierSeats(tier: PrizeTier): number {
+  return tier.positions ? tier.positions[1] - tier.positions[0] + 1 : 1;
+}
+
+// Total money on the line. Replaces three separate copies of this reduce.
+// A tier with no amount contributes nothing, so a friendly or custom challenge
+// totals 0 and callers can treat 0 as "don't show money".
+export function prizePool(challenge: Challenge): number {
+  if (!paysCash(challenge)) return 0;
+  return (challenge.prize_structure ?? []).reduce(
+    (sum, tier) => sum + (tier.amount ?? 0) * tierSeats(tier),
+    0
+  );
+}
+
+// The honours line — the rank that matters, whether or not money sits behind
+// it. Null means the challenge draws no cut at all.
+export function prizeLine(challenge: Challenge): number | null {
+  const line = challenge.prize_line_position;
+  return typeof line === "number" && line >= 1 ? line : null;
+}
+
+// ---------------------------------------------------------------------------
+// Text blocks stored as newline-delimited strings.
+// ---------------------------------------------------------------------------
+
+// Rules render as a numbered list, so a stored leading "1. " is stripped to
+// avoid "1. 1. Submit one entry per day".
+export function parseRules(rules: string | null | undefined): string[] {
+  return (rules ?? "")
+    .split("\n")
+    .map((r) => r.replace(/^\d+\.\s*/, "").trim())
+    .filter(Boolean);
+}
+
+// Acceptance acknowledgements, one checkbox each. Distinct from `rules`: these
+// are the contract the participant ticks, not the public rules blurb.
+export function parseTerms(terms: string | null | undefined): string[] {
+  return (terms ?? "")
+    .split("\n")
+    .map((t) => t.trim())
+    .filter(Boolean);
 }

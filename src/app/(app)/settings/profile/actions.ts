@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUser, getProfile } from "@/lib/auth";
 import { normalizeNigerianPhone } from "@/lib/phone";
+import { describeError } from "@/lib/errors";
 
 export type ProfileResult = { ok?: boolean; message?: string; error?: string };
 
@@ -15,18 +16,7 @@ export interface ProfileInput {
   phone_local: string; // local part typed after the +234 prefix; "" = clear
 }
 
-function describeError(e: unknown): string {
-  if (e && typeof e === "object") {
-    const err = e as { message?: unknown; code?: unknown; details?: unknown };
-    if (typeof err.message === "string" && err.message.trim()) return err.message;
-    if (err.code != null && String(err.code).trim()) {
-      const details = typeof err.details === "string" && err.details.trim() ? err.details : "see server logs";
-      return `Database error [${String(err.code)}]: ${details}`;
-    }
-  }
-  if (typeof e === "string" && e.trim()) return e;
-  return "Couldn't save your profile — check server logs";
-}
+const SAVE_FALLBACK = "Couldn't save your profile — check server logs";
 
 export async function updateProfile(input: ProfileInput): Promise<ProfileResult> {
   const user = await getUser();
@@ -76,7 +66,7 @@ export async function updateProfile(input: ProfileInput): Promise<ProfileResult>
     // Owner-only update under profiles_update_self; the bootstrap trigger keeps
     // role immutable, so role can't be touched here even if it were sent.
     const { error: updErr } = await supabase.from("profiles").update(changed).eq("id", user.id);
-    if (updErr) return { error: describeError(updErr) };
+    if (updErr) return { error: describeError(updErr, SAVE_FALLBACK) };
 
     await supabase.rpc("write_audit", {
       p_action: "profile.update",
@@ -90,7 +80,7 @@ export async function updateProfile(input: ProfileInput): Promise<ProfileResult>
     revalidatePath("/leaderboard");
     revalidatePath("/you");
   } catch (e) {
-    return { error: describeError(e) };
+    return { error: describeError(e, SAVE_FALLBACK) };
   }
 
   redirect("/settings?updated=1");

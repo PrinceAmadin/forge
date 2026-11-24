@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Page } from "@/components/ui";
 import { PageHeader } from "@/components/nav/page-header";
 import { fmtNaira } from "@/lib/format";
-import type { PrizeTier } from "@/lib/types";
+import { prizePool } from "@/lib/challenge";
+import type { Challenge } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,10 +13,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminChallengesPage() {
   await requireSuperAdmin();
   const supabase = await createClient();
-  const { data: challenges } = await supabase
+  // select("*") so reward_kind is present once migration 0015 lands — prizePool
+  // needs it to know whether a challenge pays money at all.
+  const { data } = await supabase
     .from("challenges")
-    .select("id, slug, name, status, start_date, end_date, prize_structure, prize_line_position")
+    .select("*")
     .order("start_date", { ascending: true });
+  const challenges = (data ?? []) as Challenge[];
 
   return (
     <>
@@ -29,12 +33,8 @@ export default async function AdminChallengesPage() {
         </div>
 
         <ul className="mt-6">
-          {(challenges ?? []).map((c) => {
-            const prizes = (c.prize_structure ?? []) as PrizeTier[];
-            const pool = prizes.reduce((sum, t) => {
-              const seats = t.positions ? t.positions[1] - t.positions[0] + 1 : 1;
-              return sum + t.amount * seats;
-            }, 0);
+          {challenges.map((c) => {
+            const pool = prizePool(c);
             return (
               <li key={c.id}>
                 <Link

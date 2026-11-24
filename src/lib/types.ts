@@ -36,6 +36,16 @@ export interface Challenge {
   submission_window_hrs: number;
   // Optional: absent (undefined) until migration 0009 is applied → treated as off.
   marks_enabled?: boolean;
+
+  // --- Platform columns, added by migration 0015. Optional so this type is
+  // --- accurate both before and after that migration is applied. Read them
+  // --- through the helpers in lib/challenge.ts, which supply the defaults.
+  reward_kind?: RewardKind; // absent → treat as "cash" (every existing row)
+  prize_note?: string | null; // free-text reward for a non-cash challenge
+  visibility?: ChallengeVisibility; // absent → treat as "listed"
+  created_by?: string | null;
+  terms?: string | null; // acceptance acknowledgements, newline-delimited
+  terms_version?: number;
 }
 
 export type MarkStatus = "active" | "fulfilled" | "released";
@@ -51,12 +61,31 @@ export interface Mark {
   released_at: string | null;
 }
 
-export interface PrizeTier {
-  position?: number;
-  positions?: [number, number];
-  amount: number;
+// A tier covers either ONE position or an inclusive RANGE — never both and
+// never neither. The `?: never` members make that exclusive while still
+// allowing `tier.positions` to be read off the union for narrowing, so the
+// existing `tier.positions ? … : …` checks keep working.
+//
+// `amount` is optional because not every challenge pays money: a friendly
+// challenge has no amounts at all, and a non-cash one describes its reward in
+// `note` instead. Read totals through prizePool() in lib/challenge.ts rather
+// than touching `amount` directly.
+export type PrizeTier = {
+  amount?: number;
   label: string;
-}
+  note?: string;
+} & (
+  | { position: number; positions?: never }
+  | { position?: never; positions: [number, number] }
+);
+
+// What a challenge gives the winners. Drives whether the UI shows money at all.
+export type RewardKind =
+  | "cash" // tiers carry `amount` in naira
+  | "none" // friendly challenge — no reward, no cut framing
+  | "custom"; // trophy, certificate, bragging rights — see `note` / `prize_note`
+
+export type ChallengeVisibility = "listed" | "unlisted";
 
 export interface LeaderboardRow {
   rank: number;

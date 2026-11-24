@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { requireSuperAdmin, getUser, getActiveChallenge } from "@/lib/auth";
+import { describeError } from "@/lib/errors";
 import type { Role } from "@/lib/types";
 
 export type AdminResult = { ok: boolean; error?: string };
@@ -72,26 +73,7 @@ export async function addManualEntry(
   return { ok: true };
 }
 
-// Coerce any thrown/returned error shape into a useful string. Supabase/Postgres
-// errors are plain objects ({ message, code, details, hint }) that JSON.stringify
-// to "{}" in a React child — hence the silent empty-error bug. §admin-delete
-function describeError(e: unknown): string {
-  if (e && typeof e === "object") {
-    const err = e as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
-    if (typeof err.message === "string" && err.message.trim()) return err.message;
-    if (err.code != null && String(err.code).trim()) {
-      const details =
-        typeof err.details === "string" && err.details.trim()
-          ? err.details
-          : typeof err.hint === "string" && err.hint.trim()
-            ? err.hint
-            : "see server logs";
-      return `Database error [${String(err.code)}]: ${details}`;
-    }
-  }
-  if (typeof e === "string" && e.trim()) return e;
-  return "Deletion failed — check server logs";
-}
+const DELETE_FALLBACK = "Deletion failed — check server logs";
 
 // Permanent account deletion (super_admin only). Deletes the auth.users row via
 // the service-role client, which cascades to profiles and downstream per the
@@ -114,7 +96,7 @@ export async function deleteUser(targetId: string): Promise<AdminResult> {
       .select("full_name, role")
       .eq("id", targetId)
       .single();
-    if (tErr) return { ok: false, error: describeError(tErr) };
+    if (tErr) return { ok: false, error: describeError(tErr, DELETE_FALLBACK) };
     if (!target) return { ok: false, error: "User not found." };
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -126,7 +108,7 @@ export async function deleteUser(targetId: string): Promise<AdminResult> {
     const email = authUser?.user?.email ?? null;
 
     const { error: delErr } = await admin.auth.admin.deleteUser(targetId);
-    if (delErr) return { ok: false, error: describeError(delErr) };
+    if (delErr) return { ok: false, error: describeError(delErr, DELETE_FALLBACK) };
 
     // Denormalize the deleted user into the audit record (no profile row remains).
     await supabase.rpc("write_audit", {
@@ -140,7 +122,7 @@ export async function deleteUser(targetId: string): Promise<AdminResult> {
     revalidatePath("/admin/users");
     revalidatePath("/leaderboard");
   } catch (e) {
-    return { ok: false, error: describeError(e) };
+    return { ok: false, error: describeError(e, DELETE_FALLBACK) };
   }
 
   redirect("/admin/users?deleted=1");

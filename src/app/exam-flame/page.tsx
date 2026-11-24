@@ -6,7 +6,7 @@ import { Eyebrow, PrimaryButton } from "@/components/ui";
 import { Wordmark } from "@/components/nav/Wordmark";
 import { SettingsCog } from "@/components/SettingsCog";
 import { fmtNaira } from "@/lib/format";
-import { formatDateRange } from "@/lib/challenge";
+import { formatDateRange, parseRules } from "@/lib/challenge";
 import type { PrizeTier } from "@/lib/types";
 import { JoinBlock } from "./join-block";
 
@@ -38,11 +38,7 @@ export default async function ExamFlamePage() {
     .maybeSingle();
   const enrolled = Boolean(enrolment);
 
-  const rules = (challenge.rules ?? "")
-    .split("\n")
-    .map((r) => r.replace(/^\d+\.\s*/, "").trim())
-    .filter(Boolean);
-
+  const rules = parseRules(challenge.rules);
   const prizes = challenge.prize_structure ?? [];
 
   return (
@@ -61,23 +57,29 @@ export default async function ExamFlamePage() {
       <p className="mt-3 text-[16px] text-secondary">{challenge.description}</p>
       <p className="mt-3 font-mono text-[12px] text-tertiary">{formatDateRange(challenge)}</p>
 
-      {/* Prize structure — a clean list, not stat cards. §6.5 */}
-      <section className="mt-10">
-        <Eyebrow>the prizes</Eyebrow>
-        <ul className="mt-4 flex flex-col gap-2.5">
-          {prizes.map((tier) => (
-            <li key={prizeRowLabel(tier)} className="flex items-baseline gap-5">
-              <span className="w-16 font-serif text-[20px] italic text-accent">
-                {prizeRowLabel(tier)}
-              </span>
-              <span className="font-serif text-[20px] text-primary">
-                {fmtNaira(tier.amount)}
-                {tier.positions ? " each" : ""}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* Prize structure — a clean list, not stat cards. §6.5
+          Hidden entirely when a challenge offers nothing, so a friendly
+          challenge doesn't show an empty "the prizes" heading. */}
+      {prizes.length > 0 && (
+        <section className="mt-10">
+          <Eyebrow>the prizes</Eyebrow>
+          <ul className="mt-4 flex flex-col gap-2.5">
+            {prizes.map((tier) => (
+              <li key={prizeRowLabel(tier)} className="flex items-baseline gap-5">
+                <span className="w-16 font-serif text-[20px] italic text-accent">
+                  {prizeRowLabel(tier)}
+                </span>
+                <span className="font-serif text-[20px] text-primary">
+                  {/* A tier need not carry money: a non-cash challenge
+                      describes its reward in `note` instead. */}
+                  {tier.amount != null ? fmtNaira(tier.amount) : (tier.note ?? "—")}
+                  {tier.amount != null && tier.positions ? " each" : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Rules. §6.5 */}
       {rules.length > 0 && (

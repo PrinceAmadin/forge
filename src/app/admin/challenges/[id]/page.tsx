@@ -4,7 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { Eyebrow, Page } from "@/components/ui";
 import { PageHeader } from "@/components/nav/page-header";
 import { fmtNaira } from "@/lib/format";
-import type { Challenge, PrizeTier } from "@/lib/types";
+import { prizePool } from "@/lib/challenge";
+import type { Challenge } from "@/lib/types";
 import { MarksToggle } from "./feature-toggle";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +19,7 @@ export default async function AdminChallengePage({ params }: { params: Promise<{
   const { data, error } = await supabase.from("challenges").select("*").eq("id", id).maybeSingle();
   if (error || !data) notFound();
   const challenge = data as Challenge;
-  const prizes = (challenge.prize_structure ?? []) as PrizeTier[];
-  const pool = prizes.reduce((sum, t) => {
-    const seats = t.positions ? t.positions[1] - t.positions[0] + 1 : 1;
-    return sum + t.amount * seats;
-  }, 0);
+  const pool = prizePool(challenge);
 
   return (
     <>
