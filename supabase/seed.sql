@@ -19,8 +19,11 @@ insert into halls (name) values
 on conflict (name) do nothing;
 
 -- The Exam Flame, seeded as draft (flip to active at launch).
+-- `terms` (the acceptance checkboxes, distinct from the public `rules` blurb)
+-- requires migration 0014. The backfill there only touches rows that already
+-- exist, so a freshly seeded challenge needs them set here.
 insert into challenges (
-  slug, name, description, rules, start_date, end_date,
+  slug, name, description, rules, terms, start_date, end_date,
   prize_structure, prize_line_position, status, timezone
 ) values (
   'exam-flame',
@@ -31,6 +34,9 @@ insert into challenges (
 3. Fraudulent submissions result in disqualification.
 4. A submission for a day is accepted up to the end of the following day.
 5. We record submission IP for fraud-pattern detection.$rules$,
+  $terms$I understand that submissions require timer-screenshot evidence.
+I understand that fraudulent submissions result in disqualification.
+I understand that rankings come from verified submissions only.$terms$,
   '2026-06-17',
   '2026-07-06',
   '[

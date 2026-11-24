@@ -61,9 +61,15 @@ export interface ChallengeFilter {
 
 // Powers the public browse page and the challenge switcher.
 //
-// Implemented as three bounded queries rather than a per-row count loop. Phase
-// 1.2 replaces the body with a single get_challenge_index() RPC — the signature
-// and return shape are already the RPC's, so callers will not change.
+// Implemented as two bounded queries rather than a per-row count loop.
+//
+// Migration 0014 ships a get_challenge_index() RPC that answers this in ONE
+// query (and lets anonymous visitors see participant counts, which they cannot
+// get from a client-side join because they cannot read `profiles`). The swap to
+// it lands with the browse page in Phase 1.6, deliberately NOT here: migrations
+// are applied by hand, so a commit that depends on unapplied SQL would break
+// this function in the window between the two. Nothing calls it yet, so there
+// is no rush.
 export async function listChallenges(
   filter: ChallengeFilter = {}
 ): Promise<ChallengeListItem[]> {
