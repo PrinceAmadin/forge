@@ -47,7 +47,10 @@ async function compress(file: File): Promise<Blob> {
   );
 }
 
-export function SubmitForm({ day, userId: _userId }: { day: number; userId: string }) {
+// `day` is intentionally unused: the submittable day is minted server-side by
+// requestUploadUrl (see target.target.day below), never taken from the client.
+// Phase 0.4 removes the prop entirely once createSubmission re-derives it too.
+export function SubmitForm({ day: _day, userId: _userId }: { day: number; userId: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string>();

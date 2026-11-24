@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Challenge, RankedRow } from "@/lib/types";
 
-export function marksEnabled(c: Challenge): boolean {
-  return c.marks_enabled === true;
-}
+// The pure rules live in mark-eligibility.ts so they are testable without a
+// database client; re-exported here so existing call sites are unchanged.
+export {
+  MAX_ACTIVE_MARKS,
+  markEligibility,
+  marksEnabled,
+  type MarkEligibility,
+} from "@/lib/mark-eligibility";
 
 export interface LeaderboardMarks {
   // active marks AGAINST each user (target_user_id → count)
@@ -37,27 +41,3 @@ export async function getLeaderboardMarks(challengeId: string): Promise<Leaderbo
   return { againstCount, recentOvertakes };
 }
 
-export interface MarkEligibility {
-  canMark: boolean;
-  reason?: string;
-}
-
-// Hours-based, matching the DB's above-only trigger and fulfillment check.
-export function markEligibility(
-  viewer: RankedRow | undefined,
-  target: RankedRow | undefined,
-  viewerActiveCount: number,
-  alreadyMarking: boolean
-): MarkEligibility {
-  if (!viewer || !target) return { canMark: false, reason: "Standings are still loading." };
-  if (viewer.participant_id === target.participant_id) return { canMark: false };
-  if (target.is_disqualified) return { canMark: false, reason: "This reader is out of the running." };
-  if (alreadyMarking) return { canMark: false, reason: "You're already marking this reader." };
-  if (!(target.total_hours > viewer.total_hours)) {
-    return { canMark: false, reason: "You can only mark a reader ranked above you." };
-  }
-  if (viewerActiveCount >= 3) {
-    return { canMark: false, reason: "You're at your limit of 3 marks. Release one first." };
-  }
-  return { canMark: true };
-}

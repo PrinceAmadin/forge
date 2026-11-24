@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUser, getProfile } from "@/lib/auth";
+import { normalizeNigerianPhone } from "@/lib/phone";
 
 export type ProfileResult = { ok?: boolean; message?: string; error?: string };
 
@@ -25,20 +26,6 @@ function describeError(e: unknown): string {
   }
   if (typeof e === "string" && e.trim()) return e;
   return "Couldn't save your profile — check server logs";
-}
-
-// Normalize a Nigerian mobile number to E.164 (+234XXXXXXXXXX). Accepts the
-// local part with or without a leading 0 / +234 / 234. Returns null for empty
-// (phone is optional). §profile-edit
-function normalizeNigerianPhone(local: string): { value: string | null; error?: string } {
-  let d = local.replace(/\D/g, "");
-  if (!d) return { value: null };
-  if (d.startsWith("234")) d = d.slice(3);
-  if (d.startsWith("0")) d = d.slice(1);
-  if (d.length !== 10 || !/^[789]/.test(d)) {
-    return { value: null, error: "Enter a valid Nigerian phone number." };
-  }
-  return { value: `+234${d}` };
 }
 
 export async function updateProfile(input: ProfileInput): Promise<ProfileResult> {

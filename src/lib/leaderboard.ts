@@ -1,10 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { deriveMovement, type SnapshotEntry } from "@/lib/movement";
 import type { Challenge, LeaderboardRow, RankedRow } from "@/lib/types";
-
-interface SnapshotEntry {
-  participant_id: string;
-  rank: number;
-}
 
 export interface LeaderboardData {
   rows: RankedRow[];
@@ -37,35 +33,13 @@ export async function getLeaderboard(
     .limit(1)
     .maybeSingle();
 
-  const prevRank = new Map<string, number>();
-  if (snap?.rankings) {
-    for (const e of snap.rankings as SnapshotEntry[]) {
-      prevRank.set(e.participant_id, e.rank);
-    }
-  }
-  const hasSnapshot = prevRank.size > 0;
   const prizeLine = challenge.prize_line_position;
-
-  const ranked: RankedRow[] = rows.map((r) => {
-    const prev = prevRank.get(r.participant_id);
-    const delta = prev != null ? prev - r.rank : null;
-    const isNew = hasSnapshot && prev == null && !r.is_disqualified;
-
-    const crossedIntoPrize =
-      !r.is_disqualified && prev != null && r.rank <= prizeLine && prev > prizeLine;
-    const ejectedFromPrize =
-      !r.is_disqualified && prev != null && r.rank > prizeLine && prev <= prizeLine;
-
-    return {
-      ...r,
-      total_hours: Number(r.total_hours),
-      delta: r.is_disqualified ? null : delta,
-      isNew,
-      isYou: viewerId != null && r.participant_id === viewerId,
-      crossedIntoPrize,
-      ejectedFromPrize,
-    };
-  });
+  const ranked: RankedRow[] = deriveMovement(
+    rows,
+    (snap?.rankings as SnapshotEntry[] | undefined) ?? null,
+    prizeLine,
+    viewerId
+  );
 
   const active = ranked.filter((r) => !r.is_disqualified);
   const disqualifiedCount = ranked.length - active.length;
