@@ -7,6 +7,7 @@ import { getChallengeBySlug } from "@/lib/challenges";
 import { acceptsSubmissions } from "@/lib/challenge";
 import { submittableDay, dayIsOpen } from "@/lib/challenge";
 import { SUBMISSIONS_BUCKET, submissionStoragePath } from "@/lib/storage";
+import { getLeaderboard } from "@/lib/leaderboard";
 
 export interface UploadTarget {
   path: string;
@@ -140,11 +141,47 @@ export async function createSubmission(slug: string, input: CreateInput): Promis
   await supabase.from("events").insert({
     user_id: user.id,
     name: "submission.create",
-    payload: { day: input.day, hours, flags },
+    payload: { day: input.day, hours, flags, challenge_id: challenge.id },
   });
 
   revalidatePath(`/c/${challenge.slug}/leaderboard`);
   revalidatePath(`/c/${challenge.slug}/you`);
 
-  return { ok: true, day: input.day };
+  // Ranking context for the confirmation screen. SubmitResult has declared
+  // these four fields since launch and never populated them, so submitting
+  // ended in "Submitted." — exactly the toast §6.3 says not to build. Every
+  // action is supposed to return the reader to where they stand.
+  //
+  // The submission is pending, so this rank does not yet include the hours just
+  // claimed; the screen says so rather than implying a move that has not
+  // happened. Failing to read the board must never fail the submission, hence
+  // the catch.
+  let context: Pick<SubmitResult, "rank" | "activeCount" | "hrsFromCut" | "aboveCut"> = {};
+  try {
+    const board = await getLeaderboard(challenge, user.id);
+    const me = board.rows.find((r) => r.participant_id === user.id);
+    const active = board.rows.filter((r) => !r.is_disqualified);
+    const lastIn = active[board.prizeLine - 1];
+    const firstOut = active[board.prizeLine];
+    const aboveCut = me ? me.rank <= board.prizeLine : false;
+
+    // Distance to the cut, in the direction that matters: how far you are from
+    // crossing it, or how much cushion you have above it.
+    let hrsFromCut: number | null = null;
+    if (me) {
+      const edge = aboveCut ? firstOut : lastIn;
+      if (edge) hrsFromCut = Math.round(Math.abs(me.total_hours - edge.total_hours) * 100) / 100;
+    }
+
+    context = {
+      rank: me?.rank ?? null,
+      activeCount: active.length,
+      hrsFromCut,
+      aboveCut,
+    };
+  } catch {
+    // Leave the context empty; the screen degrades to the plain confirmation.
+  }
+
+  return { ok: true, day: input.day, ...context };
 }

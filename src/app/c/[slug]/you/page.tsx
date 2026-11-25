@@ -28,11 +28,13 @@ export default async function YouPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ appealed?: string; submitted?: string }>;
+  searchParams: Promise<{ appealed?: string }>;
 }) {
   const { slug } = await params;
   const { challenge, profile } = await requireEnrolled(slug);
-  const { appealed, submitted } = await searchParams;
+  // `submitted` is gone: the submit flow now ends on its own confirmation
+  // screen rather than redirecting here with a banner. §6.3
+  const { appealed } = await searchParams;
   const user = { id: profile.id };
   const supabase = await createClient();
 
@@ -149,11 +151,6 @@ export default async function YouPage({
           <SettingsCog className="-mr-2.5 -mt-2" />
         </div>
 
-        {submitted && (
-          <p className="mt-6 rounded-md border border-accent/40 bg-accent/5 px-4 py-3 text-[13px] text-accent">
-            Submitted. An admin will verify shortly.
-          </p>
-        )}
         {appealed && (
           <p className="mt-6 rounded-md border border-[#27272a] px-4 py-3 text-[13px] text-secondary">
             Appeal submitted. The team will review it.

@@ -23,7 +23,7 @@ export async function createAppeal(
 
   const { data: sub } = await supabase
     .from("submissions")
-    .select("id, participant_id, status")
+    .select("id, participant_id, status, challenge_id, challenges(slug)")
     .eq("id", submissionId)
     .maybeSingle();
   if (!sub || sub.participant_id !== user.id) return { ok: false, error: "Submission not found." };
@@ -44,5 +44,8 @@ export async function createAppeal(
   });
   if (error) return { ok: false, error: "Couldn't submit your appeal. Try again." };
 
-  redirect("/you?appealed=1");
+  // Scoped to the submission's own challenge rather than the bare /you, which
+  // would resolve whichever challenge the reader is "primarily" in.
+  const slug = (sub as { challenges?: { slug?: string } | null }).challenges?.slug;
+  redirect(slug ? `/c/${slug}/you?appealed=1` : "/you?appealed=1");
 }

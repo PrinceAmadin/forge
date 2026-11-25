@@ -13,7 +13,12 @@ export const dynamic = "force-dynamic";
 // This cannot live in middleware: resolving which challenge someone should land
 // on needs a database read.
 
-export default async function SubmitRedirect() {
+export default async function SubmitRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
   const user = await getUser();
   if (!user) redirect("/auth?next=/submit");
 
@@ -22,5 +27,12 @@ export default async function SubmitRedirect() {
 
   // Enrolled in nothing (or only in archived challenges) → go and find one.
   if (!challenge) redirect("/challenges");
-  redirect(`/c/${challenge.slug}/submit`);
+  // Carry the query string through, or a confirmation like
+  // ?appealed=1 is silently lost on the way.
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === "string") qs.set(k, v);
+  }
+  const query = qs.toString();
+  redirect(`/c/${challenge.slug}/submit${query ? `?${query}` : ""}`);
 }

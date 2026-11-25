@@ -4,7 +4,7 @@ What's left to turn Forge from a single-challenge app into a platform that can r
 many challenges for 1,000–1,500 participants at a time.
 
 **39 items across 5 phases, plus a 9-item launch gate.
-7 done, 4 written but not yet applied to the database.**
+8 done, 4 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -52,9 +52,10 @@ This is the part you asked for first. **1.10 is the create form.**
 - [x] **1.4 The route move** — `/c/[slug]/leaderboard|submit|you|readers`, with
       `/exam-flame` and the bare `/leaderboard|/submit|/you` paths redirecting so
       nothing in anyone's bookmarks 404s. Verified against production data.
-- [ ] **1.5 Copy de-hardcoding** — challenge name comes from the row everywhere,
-      per-challenge OG images (the WhatsApp preview is your acquisition channel),
-      and join records which terms version was accepted.
+- [~] **1.5 Copy de-hardcoding** — challenge name comes from the row; the OG
+      card is now per-challenge, so sharing a link previews *that* challenge
+      rather than whichever slug was hardcoded. Terms-version recording on join
+      still pending (needs 0014).
 - [x] **1.6 `/challenges` browse page** — public list with dates, prize pool and
       participant count. Built early because the redirect stubs need somewhere to
       send a user who is enrolled in nothing. Still on plain queries, not the
@@ -158,9 +159,9 @@ What breaks at 1,500 participants.
 
 - [ ] **5.1 In-app notifications** — nobody is told anything today: not approval,
       rejection, disqualification, being marked, or being overtaken.
-- [ ] **5.2 The post-submit moment** — the spec's rank reveal. The fields for it
-      already exist in the return type and are never filled; you get a one-line
-      banner instead.
+- [x] **5.2 The post-submit moment** — the rank reveal §6.3 asks for. Submitting
+      now ends on rank, field size and distance to the cut, with "submit another
+      day", instead of redirecting to a one-line banner.
 - [ ] **5.3 Finish appeals + disqualification** — appeals tab in admin, record who
       resolved them, disqualify from a user's profile (today only reachable if they
       have a pending submission), and a reinstate path.

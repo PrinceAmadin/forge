@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { requestUploadUrl, createSubmission } from "./actions";
+import { requestUploadUrl, createSubmission, type SubmitResult } from "./actions";
+import { Submitted } from "./submitted";
 import { PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
 import { hmToDecimalHours, normalizeHM } from "@/lib/time/format";
 
@@ -63,6 +64,7 @@ export function SubmitForm({ slug }: { slug: string }) {
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   const [step, setStep] = useState<Step>("idle");
+  const [result, setResult] = useState<SubmitResult>();
 
   const hasTime = Number(hrs || 0) > 0 || Number(mins || 0) > 0;
   const canSubmit = hasTime && topic.trim() !== "" && Boolean(file) && !pending;
@@ -113,7 +115,7 @@ export function SubmitForm({ slug }: { slug: string }) {
 
   // Critical path only: signed-URL → compress → upload (25s cap) → insert.
   // No OCR, no pHash on the client. Each step advances the button label.
-  async function submitFlow(decimal: number, theFile: File): Promise<void> {
+  async function submitFlow(decimal: number, theFile: File): Promise<SubmitResult> {
     const target = await requestUploadUrl(slug);
     if (!target.ok) throw new Error(target.error);
 
@@ -144,6 +146,7 @@ export function SubmitForm({ slug }: { slug: string }) {
       whatsappTime: whatsapp.trim() || null,
     });
     if (!result.ok) throw new Error(result.error || "Couldn't save your submission. Try again.");
+    return result;
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -171,12 +174,17 @@ export function SubmitForm({ slug }: { slug: string }) {
     setStep("uploading");
     try {
       // Hard overall cap so the button can never stick on a hung promise.
-      await Promise.race([
+      const submitted = await Promise.race([
         submitFlow(decimal, file),
-        timeoutAfter(30000, "Submit timed out. Check your connection and try again."),
+        timeoutAfter<SubmitResult>(
+          30000,
+          "Submit timed out. Check your connection and try again."
+        ),
       ]);
+      setResult(submitted);
       setStep("done");
-      router.push(`/c/${slug}/you?submitted=1`);
+      // Refresh so the board and /you are current when they tap through, but
+      // stay on this screen — the confirmation IS the destination now. §6.3
       router.refresh();
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Submit failed. Try again.");
@@ -193,6 +201,30 @@ export function SubmitForm({ slug }: { slug: string }) {
         : step === "done"
           ? "Submitted ✓"
           : "Submit for verification";
+
+  // Once submitted, the moment replaces the form. §6.3
+  if (step === "done" && result) {
+    return (
+      <Submitted
+        slug={slug}
+        result={result}
+        onSubmitAnother={() => {
+          // Reset to a clean form for a reader catching up on a missed day.
+          setResult(undefined);
+          setStep("idle");
+          setPending(false);
+          setError(undefined);
+          clearPhoto();
+          setHrs("");
+          setMins("");
+          setTopic("");
+          setWhatsapp("");
+          setWhatsappErr(undefined);
+          router.refresh();
+        }}
+      />
+    );
+  }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6" noValidate>

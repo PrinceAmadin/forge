@@ -7,7 +7,14 @@ const PUBLIC_PATHS = ["/", "/auth", "/auth/verify", "/challenges"];
 // A challenge's own landing page is public — the browse page links straight to
 // it, and a sign-in wall behind every card would make browsing pointless. Only
 // the landing page itself; everything under it stays gated.
+//
+// The metadata images are listed separately and deliberately: WhatsApp,
+// Twitter and friends fetch them with no session, so gating them means the
+// preview card never renders — which is the entire reason it exists. Only the
+// generated image routes, nothing else under /c/<slug>/.
 const PUBLIC_CHALLENGE_LANDING = /^\/c\/[^/]+\/?$/;
+const PUBLIC_CHALLENGE_METADATA =
+  /^\/c\/[^/]+\/(opengraph-image|twitter-image)(-[\w-]+)?(\/[\w-]+)?\/?$/;
 
 // Captures the slug of any challenge-scoped route, for the cookie below.
 const CHALLENGE_SCOPED = /^\/c\/([^/]+)(?:\/|$)/;
@@ -15,6 +22,7 @@ const CHALLENGE_SCOPED = /^\/c\/([^/]+)(?:\/|$)/;
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;
   if (PUBLIC_CHALLENGE_LANDING.test(pathname)) return true;
+  if (PUBLIC_CHALLENGE_METADATA.test(pathname)) return true;
   // OG/social images and metadata routes must be crawlable without a session.
   return (
     pathname.startsWith("/opengraph-image") ||
