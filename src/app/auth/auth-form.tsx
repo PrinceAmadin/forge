@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/next-path";
 import { createClient } from "@/lib/supabase/client";
 import { CenteredPage, PrimaryButton, TextInput, Label, FieldError } from "@/components/ui";
 
 export function AuthForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") ?? "/leaderboard";
+  // Validated here as well as on the verify screen, so a hostile value never
+  // survives into the link this form builds.
+  const next = safeNext(params.get("next"));
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string>();

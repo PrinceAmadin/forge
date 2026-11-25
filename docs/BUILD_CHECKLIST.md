@@ -4,7 +4,7 @@ What's left to turn Forge from a single-challenge app into a platform that can r
 many challenges for 1,000–1,500 participants at a time.
 
 **38 items across 5 phases, plus a 9-item launch gate.
-5 done, 2 written but not yet applied to the database.**
+6 done, 2 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -67,9 +67,10 @@ This is the part you asked for first. **1.10 is the create form.**
 - [x] **1.9 zod validation module** — shared schemas and one `parseForm` helper,
       with the prize-tier invariants (contiguous, starts at 1, no gaps or
       overlaps) enforced server-side. 35 tests.
-- [ ] **1.10 Create form + prize builder** — **the screen you went looking for.**
-      Tier builder where contiguity can't be broken, derived cut line, and a
-      `reward_kind` switch so a friendly challenge needs no amounts.
+- [x] **1.10 Create form + prize builder** — at `/admin/challenges/new`, linked
+      from the challenges list. Tier builder where contiguity can't be broken,
+      derived cut line, `reward_kind` switch. Saves as a **draft**; launching is
+      1.11. **Needs migration 0014 applied before it can save.**
 - [ ] **1.11 RLS + status transitions** — joins and submissions require a live
       challenge and a real enrolment; `admin_set_challenge_status` enforces the
       lifecycle server-side. *Highest-risk migration — ships last, in four

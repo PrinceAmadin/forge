@@ -26,11 +26,20 @@ export default async function AdminChallengesPage() {
       <PageHeader title="Challenges" backHref="/settings" />
       <Page className="pt-8">
       <div className="max-w-[640px] pb-28 sm:pb-10">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/admin/challenges/new" className="font-mono text-[11px] text-accent">
+            + new challenge
+          </Link>
           <Link href="/admin/queue" className="font-mono text-[11px] text-accent">
             review queue →
           </Link>
         </div>
+
+        {challenges.length === 0 && (
+          <p className="mt-10 font-serif text-[18px] italic text-tertiary">
+            No challenges yet. Forge one.
+          </p>
+        )}
 
         <ul className="mt-6">
           {challenges.map((c) => {
@@ -48,7 +57,12 @@ export default async function AdminChallengesPage() {
                     </span>
                   </div>
                   <p className="mt-1 font-mono text-[12px] text-tertiary">
-                    {c.start_date} → {c.end_date} · cut at {c.prize_line_position} · {fmtNaira(pool)} pool
+                    {[
+                      `${c.start_date} → ${c.end_date}`,
+                      `cut at ${c.prize_line_position}`,
+                      // A friendly challenge has no pool — don't print ₦0.
+                      pool > 0 ? `${fmtNaira(pool)} pool` : (c.reward_kind ?? "cash"),
+                    ].join(" · ")}
                   </p>
                 </Link>
               </li>
@@ -56,9 +70,6 @@ export default async function AdminChallengesPage() {
           })}
         </ul>
 
-        <p className="mt-8 font-mono text-[11px] text-quaternary">
-          Editing &amp; lifecycle transitions — coming in v1.1
-        </p>
       </div>
       </Page>
     </>

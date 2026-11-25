@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/next-path";
 import { createClient } from "@/lib/supabase/client";
 import { CenteredPage, FieldError } from "@/components/ui";
 
@@ -12,7 +13,8 @@ export function VerifyForm() {
   const params = useSearchParams();
   const email = params.get("email") ?? "";
   const rawNext = params.get("next");
-  const next = rawNext ?? "/leaderboard";
+  // Never navigate to an unvalidated destination after authenticating.
+  const next = safeNext(rawNext);
 
   const [digits, setDigits] = useState<string[]>(Array(LEN).fill(""));
   const [error, setError] = useState<string>();
@@ -138,7 +140,7 @@ export function VerifyForm() {
           {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
         </button>
         <button
-          onClick={() => router.push(rawNext ? `/auth?next=${encodeURIComponent(rawNext)}` : "/auth")}
+          onClick={() => router.push(`/auth?next=${encodeURIComponent(next)}`)}
           className="text-[14px] text-accent"
         >
           Use a different email
