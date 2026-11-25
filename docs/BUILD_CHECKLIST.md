@@ -4,7 +4,7 @@ What's left to turn Forge from a single-challenge app into a platform that can r
 many challenges for 1,000–1,500 participants at a time.
 
 **38 items across 5 phases, plus a 9-item launch gate.
-2 done, 2 written but not yet applied to the database.**
+3 done, 2 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -63,8 +63,9 @@ This is the part you asked for first. **1.10 is the create form.**
       users see no new UI.
 - [ ] **1.8 Per-challenge admin** — the review queue becomes an index of challenges
       with pending work; manual entry takes a challenge; pending badge aggregates.
-- [ ] **1.9 zod validation module** — shared schemas and one `parseForm` helper.
-      There is currently **no validation library at all**; every action hand-rolls it.
+- [x] **1.9 zod validation module** — shared schemas and one `parseForm` helper,
+      with the prize-tier invariants (contiguous, starts at 1, no gaps or
+      overlaps) enforced server-side. 35 tests.
 - [ ] **1.10 Create form + prize builder** — **the screen you went looking for.**
       Tier builder where contiguity can't be broken, derived cut line, and a
       `reward_kind` switch so a friendly challenge needs no amounts.
