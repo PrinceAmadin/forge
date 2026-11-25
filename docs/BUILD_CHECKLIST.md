@@ -3,8 +3,8 @@
 What's left to turn Forge from a single-challenge app into a platform that can run
 many challenges for 1,000–1,500 participants at a time.
 
-**38 items across 5 phases, plus a 9-item launch gate.
-6 done, 2 written but not yet applied to the database.**
+**39 items across 5 phases, plus a 9-item launch gate.
+6 done, 3 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -71,10 +71,15 @@ This is the part you asked for first. **1.10 is the create form.**
       from the challenges list. Tier builder where contiguity can't be broken,
       derived cut line, `reward_kind` switch. Saves as a **draft**; launching is
       1.11. **Needs migration 0014 applied before it can save.**
-- [ ] **1.11 RLS + status transitions** — joins and submissions require a live
-      challenge and a real enrolment; `admin_set_challenge_status` enforces the
-      lifecycle server-side. *Highest-risk migration — ships last, in four
-      separately verified steps.*
+- [~] **1.11 Status transitions** (part A, done) — `admin_set_challenge_status`
+      owns the lifecycle graph, the launch-readiness check and the audit row the
+      spec has listed since day one and nothing ever emitted. Admin control with
+      typed confirmation for launch and archive.
+      **Migration 0015 unapplied.**
+- [ ] **1.11 RLS tightening** (part B) — joins and submissions require a live
+      challenge and a real enrolment; drafts hidden from anon. *Highest-risk
+      migration in the plan; held until the pre-flight output is in, because it
+      depends on facts about existing rows.*
 - [ ] **1.12 Cleanup** — delete the `/exam-flame` route, the slug constant, the
       orphaned `phash.ts` and unused `sharp`; fix the README (it tells you to run
       4 of 14 migrations), restore the three missing Supabase vars to

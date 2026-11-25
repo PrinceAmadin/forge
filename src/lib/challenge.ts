@@ -1,4 +1,4 @@
-import type { Challenge, PrizeTier, RewardKind } from "@/lib/types";
+import type { Challenge, ChallengeStatus, PrizeTier, RewardKind } from "@/lib/types";
 
 // All day math is anchored to the challenge timezone (Africa/Lagos), computed
 // server-side. The client never supplies challenge_day. §10
@@ -152,4 +152,65 @@ export function parseTerms(terms: string | null | undefined): string[] {
     .split("\n")
     .map((t) => t.trim())
     .filter(Boolean);
+}
+
+// ---------------------------------------------------------------------------
+// Lifecycle transitions. Spec §10 defines the graph; this is the single TS
+// expression of it, mirrored by admin_set_challenge_status in SQL. The RPC is
+// the authority — this exists so the admin UI offers exactly the moves the
+// database will accept, rather than discovering a refusal after a click.
+// ---------------------------------------------------------------------------
+
+// Forward-only, with ONE documented back-edge: verification → active, to reopen
+// a challenge whose day was closed in error. Archived is terminal, so there is
+// deliberately no un-archive.
+const TRANSITIONS: Record<ChallengeStatus, ChallengeStatus[]> = {
+  draft: ["active"],
+  active: ["verification"],
+  verification: ["completed", "active"],
+  completed: ["archived"],
+  archived: [],
+};
+
+export function nextStatuses(status: ChallengeStatus): ChallengeStatus[] {
+  return TRANSITIONS[status] ?? [];
+}
+
+export function canTransition(from: ChallengeStatus, to: ChallengeStatus): boolean {
+  return nextStatuses(from).includes(to);
+}
+
+// Why a challenge is not ready to go live, or null when it is. A cash
+// challenge must actually have prizes; a friendly one only needs its honours
+// line. Returning the reason rather than a boolean means the admin UI can
+// explain the disabled button.
+export function launchBlocker(challenge: Challenge): string | null {
+  if (prizeLine(challenge) == null) {
+    return "Set the cut before launching.";
+  }
+  if (paysCash(challenge)) {
+    const tiers = challenge.prize_structure ?? [];
+    if (tiers.length === 0) return "A cash challenge needs at least one prize tier.";
+    if (tiers.some((t) => t.amount == null)) {
+      return "Every tier of a cash challenge needs an amount.";
+    }
+  }
+  return null;
+}
+
+// Plain-language consequence of a transition, for the confirmation step. Going
+// live and archiving are the two that are effectively irreversible in practice.
+export function transitionWarning(to: ChallengeStatus): string | null {
+  switch (to) {
+    case "active":
+      return "Participants will be able to join and submit immediately. The slug, start date, timezone and prize structure lock once this happens.";
+    case "verification":
+      return "Submissions close. The board stays visible.";
+    case "completed":
+      return "Final. The board stays visible but nothing more can change.";
+    case "archived":
+      return "Everything freezes permanently. This cannot be undone.";
+    default:
+      return null;
+  }
 }
