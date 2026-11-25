@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { safeNext } from "@/lib/next-path";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 export type WelcomeState = { error?: string };
@@ -60,5 +61,5 @@ export async function completeProfile(
   if (error) return { error: "Couldn't save your profile. Try again." };
 
   await supabase.from("events").insert({ user_id: user.id, name: "profile.completed" });
-  redirect("/exam-flame");
+  redirect(safeNext(String(formData.get("next") ?? "")));
 }

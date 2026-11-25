@@ -2,17 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getUser, getActiveChallenge } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { getChallengeBySlug } from "@/lib/challenges";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { marksEnabled, markEligibility } from "@/lib/marks";
 
 export type MarkResult = { ok: boolean; error?: string };
 
-export async function createMark(targetId: string): Promise<MarkResult> {
+export async function createMark(slug: string, targetId: string): Promise<MarkResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Sign in to mark." };
 
-  const challenge = await getActiveChallenge();
+  const challenge = await getChallengeBySlug(slug);
+  if (!challenge) return { ok: false, error: "That challenge doesn't exist." };
   if (!marksEnabled(challenge)) return { ok: false, error: "Marks aren't enabled for this challenge." };
 
   const supabase = await createClient();
@@ -42,13 +44,13 @@ export async function createMark(targetId: string): Promise<MarkResult> {
     return { ok: false, error: "Couldn't place that mark. Try again." };
   }
 
-  revalidatePath("/leaderboard");
-  revalidatePath("/you");
-  revalidatePath(`/readers/${targetId}`);
+  revalidatePath(`/c/${challenge.slug}/leaderboard`);
+  revalidatePath(`/c/${challenge.slug}/you`);
+  revalidatePath(`/c/${challenge.slug}/readers/${targetId}`);
   return { ok: true };
 }
 
-export async function releaseMark(markId: string): Promise<MarkResult> {
+export async function releaseMark(slug: string, markId: string): Promise<MarkResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "Sign in." };
   const supabase = await createClient();
@@ -60,7 +62,7 @@ export async function releaseMark(markId: string): Promise<MarkResult> {
     .eq("status", "active");
   if (error) return { ok: false, error: "Couldn't release that mark." };
 
-  revalidatePath("/leaderboard");
-  revalidatePath("/you");
+  revalidatePath(`/c/${slug}/leaderboard`);
+  revalidatePath(`/c/${slug}/you`);
   return { ok: true };
 }

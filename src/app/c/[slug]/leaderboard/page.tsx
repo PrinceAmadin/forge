@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getUser, getProfile, getActiveChallenge } from "@/lib/auth";
+import { getUser, getProfile } from "@/lib/auth";
+import { requireChallengeBySlug } from "@/lib/challenges";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
@@ -14,15 +15,21 @@ import { LeaderboardTable } from "@/components/LeaderboardTable";
 import { RefreshOnFocus } from "@/components/RefreshOnFocus";
 import { RealtimeRefresh } from "@/components/realtime/realtime-refresh";
 import Link from "next/link";
+import type { Challenge } from "@/lib/types";
 
 export const revalidate = 30;
 
-export default async function LeaderboardPage() {
+export default async function LeaderboardPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const challenge = await requireChallengeBySlug(slug);
+
   // Funnel incomplete onboarding (§9 step 6). Viewing doesn't require enrolment.
   const profile = await getProfile();
-  if (!profile) redirect("/welcome");
-
-  const challenge = await getActiveChallenge();
+  if (!profile) redirect(`/welcome?next=${encodeURIComponent(`/c/${slug}/leaderboard`)}`);
   const day = currentChallengeDay(challenge);
 
   return (
@@ -30,8 +37,16 @@ export default async function LeaderboardPage() {
       <RefreshOnFocus />
       {/* Live updates: refresh when hours change (a submission is confirmed) or
           a new reader enrolls. §realtime */}
-      <RealtimeRefresh table="submissions" event="UPDATE" filter="status=eq.confirmed" />
-      <RealtimeRefresh table="challenge_participants" event="INSERT" />
+      <RealtimeRefresh
+        table="submissions"
+        event="UPDATE"
+        filter={`challenge_id=eq.${challenge.id}`}
+      />
+      <RealtimeRefresh
+        table="challenge_participants"
+        event="INSERT"
+        filter={`challenge_id=eq.${challenge.id}`}
+      />
       {/* Mobile home affordance — desktop uses the SideRail wordmark. PROBLEM-3 */}
       <div className="mb-3 flex justify-end sm:hidden">
         <Wordmark />
@@ -39,7 +54,7 @@ export default async function LeaderboardPage() {
       {/* Header — title left, campaign indicator right. §6.1 */}
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Eyebrow>forge · the exam flame</Eyebrow>
+          <Eyebrow>forge · {challenge.name.toLowerCase()}</Eyebrow>
           <h1 className="mt-2 font-serif text-[36px] leading-none text-primary">Leaderboard</h1>
         </div>
         <div className="flex items-start gap-2">
@@ -58,14 +73,14 @@ export default async function LeaderboardPage() {
       <div className="mt-6 border-t border-[#27272a]" />
 
       <Suspense fallback={<BoardSkeleton />}>
-        <Board challengeId={challenge.id} />
+        <Board challenge={challenge} />
       </Suspense>
     </Page>
   );
 }
 
-async function Board({ challengeId: _challengeId }: { challengeId: string }) {
-  const [user, challenge] = await Promise.all([getUser(), getActiveChallenge()]);
+async function Board({ challenge }: { challenge: Challenge }) {
+  const user = await getUser();
   const data = await getLeaderboard(challenge, user?.id ?? null);
 
   // Marks data only when the feature is enabled (forward-safe otherwise). §Marks
@@ -77,7 +92,7 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
         <p className="font-serif text-[22px] italic text-primary">
           No blood drawn yet. Be the first.
         </p>
-        <Link href="/submit" className="w-full max-w-[260px]">
+        <Link href={`/c/${challenge.slug}/submit`} className="w-full max-w-[260px]">
           <PrimaryButton className="h-[52px]">Submit Day 1</PrimaryButton>
         </Link>
       </div>
@@ -85,7 +100,7 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
   }
 
   // Keep the default board scannable: top prize-line + a few below the cut.
-  // The full register lives at /leaderboard/all.
+  // The full register lives at /c/<slug>/leaderboard/all.
   const visibleRows = data.rows.slice(0, data.prizeLine + 5);
 
   return (
@@ -105,7 +120,10 @@ async function Board({ challengeId: _challengeId }: { challengeId: string }) {
             {data.activeCount} readers · {formatHM(data.totalVerifiedHours, "long")} verified
             {data.disqualifiedCount > 0 ? ` · ${data.disqualifiedCount} disqualified` : ""}
           </p>
-          <Link href="/leaderboard/all" className="shrink-0 font-mono text-[11px] text-accent">
+          <Link
+            href={`/c/${challenge.slug}/leaderboard/all`}
+            className="shrink-0 font-mono text-[11px] text-accent"
+          >
             view all →
           </Link>
         </div>

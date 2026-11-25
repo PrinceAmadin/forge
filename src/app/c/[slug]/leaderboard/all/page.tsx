@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { getUser, getProfile, getActiveChallenge } from "@/lib/auth";
+import { getUser, getProfile } from "@/lib/auth";
+import { requireChallengeBySlug } from "@/lib/challenges";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { marksEnabled, getLeaderboardMarks } from "@/lib/marks";
 import { formatHM } from "@/lib/time/format";
@@ -12,24 +13,39 @@ export const dynamic = "force-dynamic";
 
 // The full register — every enrolled reader, no truncation. The cut divider
 // still marks position prizeLine→prizeLine+1 but nothing below it is dropped.
-export default async function AllReadersPage() {
-  const profile = await getProfile();
-  if (!profile) redirect("/welcome");
+export default async function AllReadersPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const challenge = await requireChallengeBySlug(slug);
 
-  const [user, challenge] = await Promise.all([getUser(), getActiveChallenge()]);
+  const profile = await getProfile();
+  if (!profile) redirect(`/welcome?next=${encodeURIComponent(`/c/${slug}/leaderboard/all`)}`);
+
+  const user = await getUser();
   const data = await getLeaderboard(challenge, user?.id ?? null);
   const marks = marksEnabled(challenge) ? await getLeaderboardMarks(challenge.id) : null;
 
   return (
     <>
-      <PageHeader title="All readers" backHref="/leaderboard" />
-      <RealtimeRefresh table="submissions" event="UPDATE" filter="status=eq.confirmed" />
-      <RealtimeRefresh table="challenge_participants" event="INSERT" />
+      <PageHeader title="All readers" backHref={`/c/${challenge.slug}/leaderboard`} />
+      <RealtimeRefresh
+        table="submissions"
+        event="UPDATE"
+        filter={`challenge_id=eq.${challenge.id}`}
+      />
+      <RealtimeRefresh
+        table="challenge_participants"
+        event="INSERT"
+        filter={`challenge_id=eq.${challenge.id}`}
+      />
       <Page className="pt-6">
         <div className="max-w-[760px]">
           {data.rows.length === 0 ? (
             <p className="py-16 text-center font-serif text-[18px] italic text-tertiary">
-              No readers yet.
+              Nobody has entered yet.
             </p>
           ) : (
             <>

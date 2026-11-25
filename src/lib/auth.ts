@@ -55,7 +55,7 @@ export async function requireOnboardedViewer(): Promise<Profile> {
     .eq("participant_id", user.id)
     .maybeSingle();
 
-  if (!enrolment) redirect("/exam-flame");
+  if (!enrolment) redirect("/challenges");
   return profile;
 }
 

@@ -13,9 +13,11 @@ const selectClass =
 export function WelcomeForm({
   halls,
   userId,
+  next,
 }: {
   halls: { id: string; name: string }[];
   userId: string;
+  next: string;
 }) {
   const [state, action, pending] = useActionState<WelcomeState, FormData>(completeProfile, {});
   const [hall, setHall] = useState("");
@@ -46,6 +48,8 @@ export function WelcomeForm({
 
       <form action={action} className="flex flex-col gap-4">
         <input type="hidden" name="avatar_url" value={avatarUrl} />
+        {/* Carries the join funnel's destination through profile completion. */}
+        <input type="hidden" name="next" value={next} />
 
         <div>
           <Label htmlFor="full_name">Full name</Label>

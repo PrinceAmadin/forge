@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireOnboardedViewer, getActiveChallenge, getUser } from "@/lib/auth";
+import { requireEnrolled } from "@/lib/challenges";
 import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { currentChallengeDay, submittableDay } from "@/lib/challenge";
@@ -24,13 +24,16 @@ function statusColor(s: string): string {
 }
 
 export default async function YouPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ slug: string }>;
   searchParams: Promise<{ appealed?: string; submitted?: string }>;
 }) {
-  const profile = await requireOnboardedViewer();
+  const { slug } = await params;
+  const { challenge, profile } = await requireEnrolled(slug);
   const { appealed, submitted } = await searchParams;
-  const [challenge, user] = await Promise.all([getActiveChallenge(), getUser()]);
+  const user = { id: profile.id };
   const supabase = await createClient();
 
   const [{ data: hall }, { data: subsRaw }, board] = await Promise.all([
@@ -198,7 +201,11 @@ export default async function YouPage({
         {/* Marks. §Marks — only when the feature is enabled. */}
         {showMarks && (
           <>
-            <YourMarks marks={yourMarks} canMarkMore={activeMarkCount < 3} />
+            <YourMarks
+              slug={challenge.slug}
+              marks={yourMarks}
+              canMarkMore={activeMarkCount < 3}
+            />
             <section className="mt-8">
               <Eyebrow>marks on you</Eyebrow>
               {marksOnYou.length === 0 ? (
@@ -270,7 +277,7 @@ export default async function YouPage({
       {!submittedToday && submittableDay(challenge) != null && (
         <div className="fixed inset-x-0 bottom-16 z-30 border-t border-[#27272a] bg-bg px-5 py-3 pb-safe sm:hidden">
           <Link
-            href="/submit"
+            href={`/c/${challenge.slug}/submit`}
             className="block w-full rounded-md bg-accent py-3 text-center font-medium text-black active:bg-amber-600"
           >
             Submit today&rsquo;s reading

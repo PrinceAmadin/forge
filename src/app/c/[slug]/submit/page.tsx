@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireOnboardedViewer, getActiveChallenge, getUser } from "@/lib/auth";
+import { requireEnrolled } from "@/lib/challenges";
 import { createClient } from "@/lib/supabase/server";
 import { submittableDay, formatLagosDate } from "@/lib/challenge";
 import { toRoman } from "@/lib/format";
@@ -11,9 +11,14 @@ import { SubmitForm } from "./submit-form";
 
 export const dynamic = "force-dynamic";
 
-export default async function SubmitPage() {
-  await requireOnboardedViewer();
-  const [challenge, user] = await Promise.all([getActiveChallenge(), getUser()]);
+export default async function SubmitPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const { challenge, profile } = await requireEnrolled(slug);
+  const user = { id: profile.id };
   const day = submittableDay(challenge);
 
   // Cog sits top-right on every submit state (sole right-side header element).
@@ -45,7 +50,7 @@ export default async function SubmitPage() {
       <div className="flex flex-col gap-4">
         <Eyebrow>submit</Eyebrow>
         <p className="font-serif text-[28px] italic text-primary">The campaign is over.</p>
-        <Link href="/leaderboard">
+        <Link href={`/c/${challenge.slug}/leaderboard`}>
           <PrimaryButton className="h-[52px]">View the final standings</PrimaryButton>
         </Link>
       </div>
@@ -76,7 +81,7 @@ export default async function SubmitPage() {
               : "rejected"}
           .
         </p>
-        <Link href="/leaderboard">
+        <Link href={`/c/${challenge.slug}/leaderboard`}>
           <PrimaryButton className="h-[52px]">View leaderboard</PrimaryButton>
         </Link>
       </div>
@@ -91,7 +96,7 @@ export default async function SubmitPage() {
       </h1>
       <p className="mt-2 text-[13px] text-tertiary">{formatLagosDate(challenge)}</p>
       <div className="mt-8">
-        <SubmitForm />
+        <SubmitForm slug={challenge.slug} />
       </div>
     </>
   );

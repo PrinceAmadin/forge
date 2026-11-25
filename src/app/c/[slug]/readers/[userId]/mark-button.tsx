@@ -6,12 +6,14 @@ import { PrimaryButton, SecondaryButton } from "@/components/ui";
 import { createMark } from "../actions";
 
 export function MarkButton({
+  slug,
   targetId,
   targetName,
   canMark,
   reason,
   remainingAfter,
 }: {
+  slug: string;
   targetId: string;
   targetName: string;
   canMark: boolean;
@@ -40,7 +42,7 @@ export function MarkButton({
   async function confirm() {
     setBusy(true);
     setError(undefined);
-    const res = await createMark(targetId);
+    const res = await createMark(slug, targetId);
     setBusy(false);
     if (!res.ok) {
       setError(res.error);

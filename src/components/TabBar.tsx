@@ -34,14 +34,21 @@ function PersonIcon({ active }: { active: boolean }) {
   );
 }
 
-const TABS = [
-  { href: "/leaderboard", label: "Leaderboard", icon: BarsIcon },
-  { href: "/submit", label: "Submit", icon: PlusIcon },
-  { href: "/you", label: "You", icon: PersonIcon },
-] as const;
+// The three destinations, resolved against the challenge being viewed. The
+// slug comes from the layout rather than usePathname so the first paint already
+// has the right hrefs.
+function tabsFor(slug: string) {
+  const base = `/c/${slug}`;
+  return [
+    { href: `${base}/leaderboard`, label: "Leaderboard", icon: BarsIcon },
+    { href: `${base}/submit`, label: "Submit", icon: PlusIcon },
+    { href: `${base}/you`, label: "You", icon: PersonIcon },
+  ] as const;
+}
 
-export function TabBar() {
+export function TabBar({ slug }: { slug: string }) {
   const pathname = usePathname();
+  const TABS = tabsFor(slug);
 
   return (
     <nav
@@ -73,14 +80,18 @@ export function TabBar() {
 }
 
 // Desktop: the same three destinations as a slim left rail (§3 / §14).
-export function SideRail() {
+export function SideRail({ slug }: { slug: string }) {
   const pathname = usePathname();
+  const TABS = tabsFor(slug);
   return (
     <nav
       aria-label="Primary"
       className="fixed inset-y-0 left-0 z-40 hidden w-[200px] flex-col border-r border-[#27272a] bg-bg px-4 py-7 sm:flex"
     >
-      <Link href="/leaderboard" className="mb-10 px-2 font-serif text-[22px] italic text-accent">
+      <Link
+        href={`/c/${slug}/leaderboard`}
+        className="mb-10 px-2 font-serif text-[22px] italic text-accent"
+      >
         Forge
       </Link>
       <ul className="flex flex-col gap-1">

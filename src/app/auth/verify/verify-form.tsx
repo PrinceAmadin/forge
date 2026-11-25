@@ -47,7 +47,7 @@ export function VerifyForm() {
     // Success: keep the "Verifying…" state up through navigation — don't clear
     // pending, or the inputs flash back to active for a frame before redirect.
     // Session cookies are written by the client; the destination's middleware /
-    // page routes to /welcome or /exam-flame as needed.
+    // page routes to /welcome or the challenge landing as needed.
     router.replace(next);
     router.refresh();
   }

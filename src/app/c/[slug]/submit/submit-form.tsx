@@ -47,9 +47,10 @@ async function compress(file: File): Promise<Blob> {
   );
 }
 
-// Takes no props: the submittable day and the storage path are both minted
-// server-side by requestUploadUrl, and the participant comes from the session.
-export function SubmitForm() {
+// The slug is the only prop: the submittable day and the storage path are both
+// minted server-side by requestUploadUrl, and the participant comes from the
+// session.
+export function SubmitForm({ slug }: { slug: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string>();
@@ -113,7 +114,7 @@ export function SubmitForm() {
   // Critical path only: signed-URL → compress → upload (25s cap) → insert.
   // No OCR, no pHash on the client. Each step advances the button label.
   async function submitFlow(decimal: number, theFile: File): Promise<void> {
-    const target = await requestUploadUrl();
+    const target = await requestUploadUrl(slug);
     if (!target.ok) throw new Error(target.error);
 
     const blob = await compress(theFile);
@@ -136,7 +137,7 @@ export function SubmitForm() {
     setStep("saving");
     // No storagePath: the action derives it from the session user and the day,
     // so the client cannot point a submission at someone else's screenshot.
-    const result = await createSubmission({
+    const result = await createSubmission(slug, {
       day: target.target.day,
       hoursClaimed: decimal,
       topic: topic.trim(),
@@ -175,7 +176,7 @@ export function SubmitForm() {
         timeoutAfter(30000, "Submit timed out. Check your connection and try again."),
       ]);
       setStep("done");
-      router.push("/you?submitted=1");
+      router.push(`/c/${slug}/you?submitted=1`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : "Submit failed. Try again.");

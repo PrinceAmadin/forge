@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { getUser, getActiveChallenge } from "@/lib/auth";
+import { getUser } from "@/lib/auth";
+import { requireChallengeBySlug } from "@/lib/challenges";
 import { createClient } from "@/lib/supabase/server";
 import { getLeaderboard } from "@/lib/leaderboard";
 import { marksEnabled, markEligibility } from "@/lib/marks";
@@ -11,12 +12,15 @@ import { MarkButton } from "./mark-button";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReaderProfilePage({ params }: { params: Promise<{ userId: string }> }) {
-  const { userId } = await params;
+export default async function ReaderProfilePage({
+  params,
+}: {
+  params: Promise<{ slug: string; userId: string }>;
+}) {
+  const { slug, userId } = await params;
+  const challenge = await requireChallengeBySlug(slug);
   const user = await getUser();
-  if (!user) redirect("/auth");
-
-  const challenge = await getActiveChallenge();
+  if (!user) redirect(`/auth?next=${encodeURIComponent(`/c/${slug}/readers/${userId}`)}`);
   const board = await getLeaderboard(challenge, user.id);
   const target = board.rows.find((r) => r.participant_id === userId);
   if (!target) notFound();
@@ -50,7 +54,7 @@ export default async function ReaderProfilePage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <PageHeader title={target.full_name} backHref="/leaderboard" />
+      <PageHeader title={target.full_name} backHref={`/c/${challenge.slug}/leaderboard`} />
       <Page className="pt-8">
       <div className="max-w-[480px]">
         <p className="text-[13px] text-tertiary">
@@ -80,6 +84,7 @@ export default async function ReaderProfilePage({ params }: { params: Promise<{ 
 
         {enabled && user.id !== userId && (
           <MarkButton
+            slug={challenge.slug}
             targetId={userId}
             targetName={target.full_name}
             canMark={canMark}

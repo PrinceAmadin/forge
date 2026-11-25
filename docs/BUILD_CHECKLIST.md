@@ -4,7 +4,7 @@ What's left to turn Forge from a single-challenge app into a platform that can r
 many challenges for 1,000–1,500 participants at a time.
 
 **38 items across 5 phases, plus a 9-item launch gate.
-3 done, 2 written but not yet applied to the database.**
+5 done, 2 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -49,15 +49,16 @@ This is the part you asked for first. **1.10 is the create form.**
 - [ ] **1.3 Constraints + immutability** — date ordering, valid enums, and a trigger
       locking `slug` / `start_date` / `timezone` / prizes once a challenge leaves
       draft. *First migration that can fail against existing rows.*
-- [ ] **1.4 The route move** — `/c/[slug]/leaderboard|submit|you`, plus `/challenges`.
-      Removes the hardcoded `ACTIVE_CHALLENGE_SLUG`. **Until this lands, a second
-      challenge is invisible no matter how it was created.** Ships atomically with
-      redirects so existing WhatsApp links keep working.
+- [x] **1.4 The route move** — `/c/[slug]/leaderboard|submit|you|readers`, with
+      `/exam-flame` and the bare `/leaderboard|/submit|/you` paths redirecting so
+      nothing in anyone's bookmarks 404s. Verified against production data.
 - [ ] **1.5 Copy de-hardcoding** — challenge name comes from the row everywhere,
       per-challenge OG images (the WhatsApp preview is your acquisition channel),
       and join records which terms version was accepted.
-- [ ] **1.6 `/challenges` browse page** — public list with dates, prize pool and
-      participant count. Where people find a challenge to join.
+- [x] **1.6 `/challenges` browse page** — public list with dates, prize pool and
+      participant count. Built early because the redirect stubs need somewhere to
+      send a user who is enrolled in nothing. Still on plain queries, not the
+      `get_challenge_index` RPC.
 - [ ] **1.7 Challenge switcher** — the header wordmark becomes a switcher for people
       enrolled in several. Renders as plain text when they're in one, so existing
       users see no new UI.

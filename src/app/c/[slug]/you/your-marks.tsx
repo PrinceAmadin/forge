@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Eyebrow } from "@/components/ui";
 import { padRank } from "@/lib/format";
 import { formatHM } from "@/lib/time/format";
-import { releaseMark } from "@/app/(app)/readers/actions";
+import { releaseMark } from "@/app/c/[slug]/readers/actions";
 import type { MarkStatus } from "@/lib/types";
 
 export interface YourMarkRow {
@@ -18,13 +18,21 @@ export interface YourMarkRow {
   aheadHours: number; // target_hours - my_hours (can be negative once overtaken)
 }
 
-export function YourMarks({ marks, canMarkMore }: { marks: YourMarkRow[]; canMarkMore: boolean }) {
+export function YourMarks({
+  slug,
+  marks,
+  canMarkMore,
+}: {
+  slug: string;
+  marks: YourMarkRow[];
+  canMarkMore: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
   async function release(id: string) {
     setBusy(id);
-    await releaseMark(id);
+    await releaseMark(slug, id);
     setBusy(null);
     router.refresh();
   }
@@ -72,7 +80,10 @@ export function YourMarks({ marks, canMarkMore }: { marks: YourMarkRow[]; canMar
         </ul>
       )}
       {canMarkMore && (
-        <Link href="/leaderboard" className="mt-3 inline-block font-serif text-[14px] italic text-accent">
+        <Link
+          href={`/c/${slug}/leaderboard`}
+          className="mt-3 inline-block font-serif text-[14px] italic text-accent"
+        >
           Mark another rival →
         </Link>
       )}

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { getActiveChallenge } from "@/lib/auth";
+import { getChallengeBySlug } from "@/lib/challenges";
+import { acceptsSubmissions } from "@/lib/challenge";
 import { submittableDay, dayIsOpen } from "@/lib/challenge";
 import { SUBMISSIONS_BUCKET, submissionStoragePath } from "@/lib/storage";
 
@@ -15,17 +16,18 @@ export interface UploadTarget {
 
 // Step 2–3 of the upload flow: validate, then mint a 60s signed upload URL
 // scoped to the participant's own folder. §11
-export async function requestUploadUrl(): Promise<
-  { ok: true; target: UploadTarget } | { ok: false; error: string }
-> {
+export async function requestUploadUrl(
+  slug: string
+): Promise<{ ok: true; target: UploadTarget } | { ok: false; error: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sign in to submit." };
 
-  const challenge = await getActiveChallenge();
-  if (challenge.status !== "active") {
+  const challenge = await getChallengeBySlug(slug);
+  if (!challenge) return { ok: false, error: "That challenge doesn't exist." };
+  if (!acceptsSubmissions(challenge)) {
     return { ok: false, error: "The challenge isn't accepting submissions right now." };
   }
 
@@ -81,15 +83,16 @@ export interface SubmitResult {
 // The day is still the caller's claim, but it is bounded by dayIsOpen (the
 // documented 48h window, §10) and the path is built from the session user id,
 // so the row can only ever reference the caller's own folder.
-export async function createSubmission(input: CreateInput): Promise<SubmitResult> {
+export async function createSubmission(slug: string, input: CreateInput): Promise<SubmitResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sign in to submit." };
 
-  const challenge = await getActiveChallenge();
-  if (challenge.status !== "active") {
+  const challenge = await getChallengeBySlug(slug);
+  if (!challenge) return { ok: false, error: "That challenge doesn't exist." };
+  if (!acceptsSubmissions(challenge)) {
     return { ok: false, error: "The challenge isn't accepting submissions right now." };
   }
 
@@ -140,8 +143,8 @@ export async function createSubmission(input: CreateInput): Promise<SubmitResult
     payload: { day: input.day, hours, flags },
   });
 
-  revalidatePath("/leaderboard");
-  revalidatePath("/you");
+  revalidatePath(`/c/${challenge.slug}/leaderboard`);
+  revalidatePath(`/c/${challenge.slug}/you`);
 
   return { ok: true, day: input.day };
 }
