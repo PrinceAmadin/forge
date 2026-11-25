@@ -4,7 +4,7 @@ What's left to turn Forge from a single-challenge app into a platform that can r
 many challenges for 1,000–1,500 participants at a time.
 
 **39 items across 5 phases, plus a 9-item launch gate.
-6 done, 3 written but not yet applied to the database.**
+7 done, 4 written but not yet applied to the database.**
 
 Legend: `[x]` done and on `main` · `[~]` code written, **database change not applied** ·
 `[ ]` not started · **YOURS** = needs you, not me.
@@ -95,13 +95,14 @@ Things that are silently wrong today.
       so **7h45m is credited as 7.8**. Fixes the function, recomputes every existing
       confirmed row, and makes appeal-restore atomic (it's currently three separate
       writes that can leave a split state).
-- [ ] **2.2 Fix Marks** — eligibility becomes rank-based instead of hours-based
-      (**this is why it did nothing when you turned it on**: everyone tied, and
-      everyone at 0 hours, was blocked), marks visible on mobile, release no longer
-      burns the pairing forever, fulfilment matches the board's ranking.
-- [ ] **2.3 Marks trigger cost** — a ten-line guard. The trigger currently
-      recomputes the whole challenge on every submission change even when marks are
-      switched off, which is ~90M wasted row touches a day at full scale.
+- [~] **2.2 Fix Marks** — eligibility is rank-based (hours-based is why it did
+      nothing when you turned it on: everyone tied, and everyone at 0 hours, was
+      blocked), marks now show on mobile, release no longer burns the pairing,
+      fulfilment matches the board and reverses if the overtake is undone.
+      **Migration 0016 unapplied.**
+- [x] **2.3 Marks trigger cost** — folded into 0016: a `WHEN` clause so it stops
+      firing on changes that cannot move the board, plus an early return when
+      marks are off. Also adds the missing `marks(challenge_id)` index.
 - [ ] **2.4 Snapshot writer** — **nothing writes `leaderboard_snapshots`**, so the
       entire movement column renders "—" forever. A 6-hourly cron turns it back on.
 - [ ] **2.5 One source of truth for the cut** — the "hrs to cross" figure is computed

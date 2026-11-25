@@ -76,21 +76,41 @@ describe("markEligibility", () => {
     expect(markEligibility(viewer, below, 0, false).reason).toMatch(/ranked above you/i);
   });
 
-  // --- The Marks bug, pinned as current behaviour. ---
-  // Phase 2.2 makes eligibility rank-based, after which BOTH of these invert:
-  // a tied reader ranked above you becomes markable, and a field at 0 hours
-  // stops being completely frozen. These tests are the tripwire that proves
-  // the change was deliberate.
-  describe("hours-based gate (to be replaced in Phase 2.2)", () => {
-    it("currently refuses a tied reader even when they rank above you", () => {
+  // --- The Marks bug, now fixed. ---
+  // Eligibility compares RANK. These two cases are why the feature did nothing
+  // when it was switched on during a live challenge: the old test was
+  // `target.total_hours > viewer.total_hours`, which is false for every tie and
+  // false for the entire field while everyone sits at 0 confirmed hours.
+  describe("rank-based gate", () => {
+    it("allows marking a reader tied on hours but ranked above you", () => {
+      // The board breaks ties on verified_days then earliest_submission, so
+      // equal hours does NOT mean equal standing. The old hours comparison
+      // ignored that and refused.
       const tied = reader({ participant_id: "t", rank: 4, total_hours: 40 });
-      expect(markEligibility(viewer, tied, 0, false).canMark).toBe(false);
+      expect(markEligibility(viewer, tied, 0, false)).toEqual({ canMark: true });
     });
 
-    it("currently freezes the whole field before anyone has confirmed hours", () => {
+    it("works before anyone has confirmed hours", () => {
+      // Day one: everyone on 0 hours, ranks already assigned. Previously this
+      // froze every mark button on the site.
       const a = reader({ participant_id: "a", rank: 1, total_hours: 0 });
       const b = reader({ participant_id: "b", rank: 2, total_hours: 0 });
-      expect(markEligibility(b, a, 0, false).canMark).toBe(false);
+      expect(markEligibility(b, a, 0, false)).toEqual({ canMark: true });
+      // Still one-directional: the leader cannot mark downward.
+      expect(markEligibility(a, b, 0, false).canMark).toBe(false);
+    });
+
+    it("refuses someone on identical rank", () => {
+      const same = reader({ participant_id: "t", rank: 10, total_hours: 40 });
+      expect(markEligibility(viewer, same, 0, false).canMark).toBe(false);
+    });
+
+    it("ignores hours entirely — rank is the only ordering that counts", () => {
+      // Ranked above despite FEWER hours is impossible on a real board, but if
+      // the two ever disagree, rank wins. Pinning it stops a future refactor
+      // quietly reintroducing the hours comparison.
+      const oddlyAbove = reader({ participant_id: "t", rank: 2, total_hours: 1 });
+      expect(markEligibility(viewer, oddlyAbove, 0, false)).toEqual({ canMark: true });
     });
   });
 });

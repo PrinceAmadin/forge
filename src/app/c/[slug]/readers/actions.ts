@@ -22,14 +22,28 @@ export async function createMark(slug: string, targetId: string): Promise<MarkRe
   const viewer = board.rows.find((r) => r.participant_id === user.id);
   const target = board.rows.find((r) => r.participant_id === targetId);
 
-  const { count } = await supabase
-    .from("marks")
-    .select("*", { count: "exact", head: true })
-    .eq("challenge_id", challenge.id)
-    .eq("marker_user_id", user.id)
-    .eq("status", "active");
+  const [{ count }, { data: existing }] = await Promise.all([
+    supabase
+      .from("marks")
+      .select("*", { count: "exact", head: true })
+      .eq("challenge_id", challenge.id)
+      .eq("marker_user_id", user.id)
+      .eq("status", "active"),
+    supabase
+      .from("marks")
+      .select("id")
+      .eq("challenge_id", challenge.id)
+      .eq("marker_user_id", user.id)
+      .eq("target_user_id", targetId)
+      .eq("status", "active")
+      .maybeSingle(),
+  ]);
 
-  const elig = markEligibility(viewer, target, count ?? 0, false);
+  // Was hardcoded false, leaving the unique violation below to catch a repeat
+  // mark. After 0016 scoped uniqueness to ACTIVE marks there is no violation to
+  // catch, because re-marking someone you released is now legal — so this has
+  // to be checked properly.
+  const elig = markEligibility(viewer, target, count ?? 0, Boolean(existing));
   if (!elig.canMark) return { ok: false, error: elig.reason ?? "You can't mark this reader." };
 
   const { error } = await supabase.from("marks").insert({
@@ -38,8 +52,8 @@ export async function createMark(slug: string, targetId: string): Promise<MarkRe
     target_user_id: targetId,
   });
   if (error) {
-    // Unique violation: a mark row for this pair already exists (incl. released).
-    if (error.code === "23505") return { ok: false, error: "You've already marked this reader this challenge." };
+    // Unique violation now means only one thing: an ACTIVE mark for this pair.
+    if (error.code === "23505") return { ok: false, error: "You're already marking this reader." };
     if (/ranked above/i.test(error.message)) return { ok: false, error: "You can only mark a reader ranked above you." };
     return { ok: false, error: "Couldn't place that mark. Try again." };
   }

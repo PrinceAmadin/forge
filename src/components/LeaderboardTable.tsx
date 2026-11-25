@@ -133,6 +133,18 @@ function Row({
             ]
               .filter(Boolean)
               .join(" · ")}
+            {/* Marks against this reader. The desktop column below is
+                md:table-cell only, so without this a placed mark was invisible
+                to the ~95% of users on a phone — which is most of why the
+                feature looked dead. The callout being public is the point. */}
+            {showMarks && marksCount > 0 && (
+              <span className={marksCount >= 3 ? "text-accent" : "text-tertiary"}>
+                {" · "}
+                <span aria-label={`${marksCount} marks against this reader`}>
+                  ● {marksCount}
+                </span>
+              </span>
+            )}
           </div>
         </div>
       </Cell>
